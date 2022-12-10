@@ -1,0 +1,8 @@
+## Interface: 80300
+## X-Min-Interface: 80000
+## Author: Mark Tilton / Zack Hill
+## Title: Dragonriding Race Leaderboards
+## Notes: Tracks and displays leaderboards for Dragonriding races.
+## Version: 1
+
+DragonridingRaceLeaderboards.lua
