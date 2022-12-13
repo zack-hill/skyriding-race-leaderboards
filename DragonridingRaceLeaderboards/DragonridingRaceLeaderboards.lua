@@ -1,5 +1,9 @@
 AppName = "Dragonriding Race Leaderboards"
-DRL = LibStub("AceAddon-3.0"):NewAddon(AppName)
+DRL = LibStub("AceAddon-3.0"):NewAddon(AppName, "AceEvent-3.0")
+
+local lastQuestAccepted = ""
+local raceName = ""
+local raceTime = ""
 
 local options = {
     name = AppName,
@@ -24,11 +28,13 @@ local options = {
         },
     },
 }
-LibStub("AceConfig-3.0"):RegisterOptionsTable(AppName, options, nil)
-LibStub("AceConfigDialog-3.0"):AddToBlizOptions(AppName, AppName)
 
 function DRL:OnInitialize()
-    -- Code that you want to run when the addon is first loaded goes here.
+    LibStub("AceConfig-3.0"):RegisterOptionsTable(AppName, options, nil)
+    LibStub("AceConfigDialog-3.0"):AddToBlizOptions(AppName, AppName)
+
+    DRL:RegisterEvent("CHAT_MSG_SYSTEM")
+    DRL:RegisterEvent("CHAT_MSG_MONSTER_SAY")
 end
 
 function DRL:OnEnable()    
@@ -63,7 +69,7 @@ function DRL:OnEnable()
     buttonName = "SubmitButton"
     button = CreateFrame("Button", buttonName, UIParent, "SecureActionButtonTemplate")
 
-    button:SetPoint("CENTER", mainframe, "CENTER", 0, 0)
+    button:SetPoint("CENTER", mainframe, "CENTER", -500, -500)
     button:SetWidth(130)
     button:SetHeight(30)
 
@@ -92,11 +98,32 @@ function DRL:OnEnable()
     button:SetAttribute("macrotext", macroText)
     button:RegisterForClicks("LeftButtonDown", "LeftButtonUp")
 
-    local status = SetBindingClick("W", buttonName, "LeftButton 1")
+    -- local status = SetBindingClick("W", buttonName, "LeftButton 1")
 end
 
 function DRL:OnDisable()
     -- Called when the addon is disabled
+end
+
+function DRL:CHAT_MSG_SYSTEM(event, text)
+    local prefix = "Quest accepted: "
+    if #text >= #prefix and string.sub(text, 1, #prefix) == prefix then
+        lastQuestAccepted = string.sub(text, #prefix, #text)
+        print("Started quest " .. lastQuestAccepted)
+    end
+end
+
+function DRL:CHAT_MSG_MONSTER_SAY(event, text, name)
+    print("Got event with text: " .. text .. " said by " .. name)        
+    
+    if name == "Bronze Timekeeper" then
+        -- Got event with text: Your race time was 49.441 seconds. Your personal best for this race is 48.455 seconds.
+        local pattern = "Your race time was (%d+\.%d+) seconds"
+        local _, _, timeString = string.find(text, pattern)
+        if timeString ~= nil then
+            print("Race time was " .. timeString)        
+        end
+    end
 end
 
 function DRL:GetCommunityName(info)
