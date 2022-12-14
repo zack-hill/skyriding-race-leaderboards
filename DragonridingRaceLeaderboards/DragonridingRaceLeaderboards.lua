@@ -39,39 +39,81 @@ function DRL:OnInitialize()
     DRL:RegisterEvent("UNIT_AURA")
 end
 
-function DRL:OnEnable()    
-    -- Get the club id
-    local clubId = -1
+function DRL:OnEnable()
+end
+
+function DRL:OnDisable()
+    -- Called when the addon is disabled
+end
+
+function DRL:CHAT_MSG_SYSTEM(event, text)
+    local questAcceptedPrefix = "Quest accepted: "
+    if #text >= #questAcceptedPrefix and string.sub(text, 1, #questAcceptedPrefix) == questAcceptedPrefix then
+        lastQuestAccepted = string.sub(text, #questAcceptedPrefix + 1, #text)
+        print("Quest Accepted: " .. lastQuestAccepted)
+    end
+end
+
+function DRL:CHAT_MSG_MONSTER_SAY(event, text, name)
+    if listenForRaceTime and name == "Bronze Timekeeper" then
+        local pattern = "Your race time was (%d+\.%d+) seconds"
+        local _, _, timeString = string.find(text, pattern)
+        if timeString ~= nil then
+            print("Race time was " .. timeString)
+            raceTime = timeString
+            listenForRaceTime = false
+            DisplaySubmitPrompt()
+        end
+    end
+end
+
+function DRL:UNIT_AURA(_, target, info)
+    if target == "player" then
+        for _, aura in ipairs(info.addedAuras or {}) do
+            if aura.name == "Race Starting" then
+                raceName = lastQuestAccepted
+                listenForRaceTime = true
+                print("Race started, listening for time")
+            end
+        end
+    end
+end
+
+function GetClubId()
     local clubs = C_Club.GetSubscribedClubs()
     for i = 1, #clubs, 1 do
         if clubs[i].name == CommunityName then
-            clubId = clubs[i].clubId
+            return clubs[i].clubId
         end
     end
-    print(clubId)
 
-    -- Get the stream id
-    local streamId = -1
-    streams = C_Club.GetStreams(clubId)
+    return nil
+end
+
+function GetStreamId(clubId)
+    local streams = C_Club.GetStreams(clubId)
     for i = 1, #streams, 1 do
         if streams[i].name == ChannelName then
-            streamId = streams[i].streamId
+            return streams[i].streamId
         end
     end
-    print(streamId)
 
-    -- Get location information
+    return nil
+end
+
+function DisplaySubmitPrompt()    
+    local clubId = GetClubId()
+    local streamId = GetStreamId(clubId)
     local zone = GetZoneText()
-    local y, x, _, instance1 = UnitPosition("player")
 
-    start_message = "Starting a race in "..zone.." at "..x..", "..y
-    macroText = "/run C_Club.SendMessage("..clubId..","..streamId..",\""..start_message.."\")"
+    local raceMessage = "Completed " .. raceName .. " in " .. zone .. " in " .. raceTime .. " seconds"
+    local macroText = "/run C_Club.SendMessage("..clubId..","..streamId..",\""..raceMessage.."\")"
     print(macroText)
 
     buttonName = "SubmitButton"
     button = CreateFrame("Button", buttonName, UIParent, "SecureActionButtonTemplate")
 
-    button:SetPoint("CENTER", mainframe, "CENTER", -500, -500)
+    button:SetPoint("CENTER", mainframe, "CENTER", 0, 0)
     button:SetWidth(130)
     button:SetHeight(30)
 
@@ -101,40 +143,6 @@ function DRL:OnEnable()
     button:RegisterForClicks("LeftButtonDown", "LeftButtonUp")
 
     -- local status = SetBindingClick("W", buttonName, "LeftButton 1")
-end
-
-function DRL:OnDisable()
-    -- Called when the addon is disabled
-end
-
-function DRL:CHAT_MSG_SYSTEM(event, text)
-    local questAcceptedPrefix = "Quest accepted: "
-    if #text >= #questAcceptedPrefix and string.sub(text, 1, #questAcceptedPrefix) == questAcceptedPrefix then
-        lastQuestAccepted = string.sub(text, #questAcceptedPrefix, #text)
-    end
-end
-
-function DRL:CHAT_MSG_MONSTER_SAY(event, text, name)
-    if listenForRaceTime and name == "Bronze Timekeeper" then
-        local pattern = "Your race time was (%d+\.%d+) seconds"
-        local _, _, timeString = string.find(text, pattern)
-        if timeString ~= nil then
-            print("Race time was " .. timeString)
-            listenForRaceTime = false
-        end
-    end
-end
-
-function DRL:UNIT_AURA(_, target, info)
-    if target == "player" then
-        for _, aura in ipairs(info.addedAuras or {}) do
-            local raceStartingSpellId = 382632
-            if aura.spellId == raceStartingSpellId then
-                raceName = lastQuestAccepted
-                listenForRaceTime = true
-            end
-        end
-    end
 end
 
 function DRL:GetCommunityName(info)
