@@ -5,6 +5,8 @@ local lastQuestAccepted = ""
 local listenForRaceTime = false
 local raceName = ""
 local raceTime = ""
+local raceSubmitButtonName = "RaceTimeSubmitButton"
+local raceSubmitButtonFrame = nil
 
 local options = {
     name = AppName,
@@ -40,17 +42,44 @@ function DRL:OnInitialize()
 end
 
 function DRL:OnEnable()
+    raceSubmitButtonFrame = CreateFrame("Button", raceSubmitButtonName, UIParent, "SecureActionButtonTemplate")
+    raceSubmitButtonFrame:Hide()
+    raceSubmitButtonFrame:SetPoint("CENTER", mainframe, "CENTER", 0, 0)
+    raceSubmitButtonFrame:SetWidth(130)
+    raceSubmitButtonFrame:SetHeight(30)
+
+    raceSubmitButtonFrame:SetText("Submit Race Time")
+    raceSubmitButtonFrame:SetNormalFontObject("GameFontNormal")
+
+    local ntex = raceSubmitButtonFrame:CreateTexture()
+    ntex:SetTexture("Interface/Buttons/UI-Panel-Button-Up")
+    ntex:SetTexCoord(0, 0.625, 0, 0.6875)
+    ntex:SetAllPoints()	
+    raceSubmitButtonFrame:SetNormalTexture(ntex)
+
+    local htex = raceSubmitButtonFrame:CreateTexture()
+    htex:SetTexture("Interface/Buttons/UI-Panel-Button-Highlight")
+    htex:SetTexCoord(0, 0.625, 0, 0.6875)
+    htex:SetAllPoints()
+    raceSubmitButtonFrame:SetHighlightTexture(htex)
+
+    local ptex = raceSubmitButtonFrame:CreateTexture()
+    ptex:SetTexture("Interface/Buttons/UI-Panel-Button-Down")
+    ptex:SetTexCoord(0, 0.625, 0, 0.6875)
+    ptex:SetAllPoints()
+    raceSubmitButtonFrame:SetPushedTexture(ptex)
+
+    raceSubmitButtonFrame:SetAttribute("type", "macro")
+    raceSubmitButtonFrame:RegisterForClicks("LeftButtonDown", "LeftButtonUp")
 end
 
 function DRL:OnDisable()
-    -- Called when the addon is disabled
 end
 
 function DRL:CHAT_MSG_SYSTEM(event, text)
     local questAcceptedPrefix = "Quest accepted: "
     if #text >= #questAcceptedPrefix and string.sub(text, 1, #questAcceptedPrefix) == questAcceptedPrefix then
         lastQuestAccepted = string.sub(text, #questAcceptedPrefix + 1, #text)
-        print("Quest Accepted: " .. lastQuestAccepted)
     end
 end
 
@@ -59,7 +88,6 @@ function DRL:CHAT_MSG_MONSTER_SAY(event, text, name)
         local pattern = "Your race time was (%d+\.%d+) seconds"
         local _, _, timeString = string.find(text, pattern)
         if timeString ~= nil then
-            print("Race time was " .. timeString)
             raceTime = timeString
             listenForRaceTime = false
             DisplaySubmitPrompt()
@@ -73,7 +101,6 @@ function DRL:UNIT_AURA(_, target, info)
             if aura.name == "Race Starting" then
                 raceName = lastQuestAccepted
                 listenForRaceTime = true
-                print("Race started, listening for time")
             end
         end
     end
@@ -107,40 +134,12 @@ function DisplaySubmitPrompt()
     local zone = GetZoneText()
 
     local raceMessage = "Completed " .. raceName .. " in " .. zone .. " in " .. raceTime .. " seconds"
-    local macroText = "/run C_Club.SendMessage("..clubId..","..streamId..",\""..raceMessage.."\")"
-    print(macroText)
+    local sendMessageCommand = "/run C_Club.SendMessage("..clubId..","..streamId..",\""..raceMessage.."\")"
+    local hideButtonCommand = "/run " .. raceSubmitButtonName .. ":Hide()"
+    local macroText = sendMessageCommand .. "\n" .. hideButtonCommand
 
-    buttonName = "SubmitButton"
-    button = CreateFrame("Button", buttonName, UIParent, "SecureActionButtonTemplate")
-
-    button:SetPoint("CENTER", mainframe, "CENTER", 0, 0)
-    button:SetWidth(130)
-    button:SetHeight(30)
-
-    button:SetText("Submit Race Time")
-    button:SetNormalFontObject("GameFontNormal")
-
-    local ntex = button:CreateTexture()
-    ntex:SetTexture("Interface/Buttons/UI-Panel-Button-Up")
-    ntex:SetTexCoord(0, 0.625, 0, 0.6875)
-    ntex:SetAllPoints()	
-    button:SetNormalTexture(ntex)
-
-    local htex = button:CreateTexture()
-    htex:SetTexture("Interface/Buttons/UI-Panel-Button-Highlight")
-    htex:SetTexCoord(0, 0.625, 0, 0.6875)
-    htex:SetAllPoints()
-    button:SetHighlightTexture(htex)
-
-    local ptex = button:CreateTexture()
-    ptex:SetTexture("Interface/Buttons/UI-Panel-Button-Down")
-    ptex:SetTexCoord(0, 0.625, 0, 0.6875)
-    ptex:SetAllPoints()
-    button:SetPushedTexture(ptex)
-
-    button:SetAttribute("type", "macro")
-    button:SetAttribute("macrotext", macroText)
-    button:RegisterForClicks("LeftButtonDown", "LeftButtonUp")
+    raceSubmitButtonFrame:SetAttribute("macrotext", macroText)
+    raceSubmitButtonFrame:Show()
 
     -- local status = SetBindingClick("W", buttonName, "LeftButton 1")
 end
