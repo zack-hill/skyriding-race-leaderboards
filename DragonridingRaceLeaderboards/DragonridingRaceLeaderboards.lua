@@ -1,5 +1,5 @@
 AppName = "Dragonriding Race Leaderboards"
-DRL = LibStub("AceAddon-3.0"):NewAddon(AppName, "AceEvent-3.0")
+DRL = LibStub("AceAddon-3.0"):NewAddon(AppName, "AceConsole-3.0", "AceEvent-3.0")
 
 local lastQuestAccepted = ""
 local listenForRaceTime = false
@@ -36,10 +36,25 @@ function DRL:OnInitialize()
     LibStub("AceConfig-3.0"):RegisterOptionsTable(AppName, options, nil)
     LibStub("AceConfigDialog-3.0"):AddToBlizOptions(AppName, AppName)
 
+    DRL:RegisterChatCommand("readchat", "ReadChat")
     DRL:RegisterEvent("CHAT_MSG_SYSTEM")
     DRL:RegisterEvent("CHAT_MSG_MONSTER_SAY")
     DRL:RegisterEvent("UNIT_AURA")
 end
+
+function DRL:ReadChat()
+    local clubId = GetClubId()
+    local streamId = GetStreamId(clubId)
+    local ranges = C_Club.GetMessageRanges(clubId, streamId)
+    for i = 1, #ranges, 1 do
+        local range = ranges[i]
+        local messages = C_Club.GetMessagesInRange(clubId, streamId, range.oldestMessageId, range.newestMessageId)
+        for j = 1, #messages, 1 do
+            print(messages[j].content)
+        end
+    end 
+end
+
 
 function DRL:OnEnable()
     raceSubmitButtonFrame = CreateFrame("Button", raceSubmitButtonName, UIParent, "SecureActionButtonTemplate")
@@ -128,7 +143,7 @@ function GetStreamId(clubId)
     return nil
 end
 
-function DisplaySubmitPrompt()    
+function DisplaySubmitPrompt()
     local clubId = GetClubId()
     local streamId = GetStreamId(clubId)
     local zone = GetZoneText()
