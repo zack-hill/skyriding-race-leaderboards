@@ -50,7 +50,12 @@ function DRL:ReadChat()
         local range = ranges[i]
         local messages = C_Club.GetMessagesInRange(clubId, streamId, range.oldestMessageId, range.newestMessageId)
         for j = 1, #messages, 1 do
-            print(messages[j].content)
+            -- local pattern = "Completed (.*) in (.*) in (%d+\.%d+) seconds"
+            local pattern = "([^|]+)|([^|]+)|(%d+\.%d+)"
+            local _, _, raceName, zone, timeString = string.find(messages[j].content, pattern)
+            if raceName ~= nil then                
+                print(messages[j].content)
+            end
         end
     end 
 end
@@ -148,7 +153,7 @@ function DisplaySubmitPrompt()
     local streamId = GetStreamId(clubId)
     local zone = GetZoneText()
 
-    local raceMessage = "Completed " .. raceName .. " in " .. zone .. " in " .. raceTime .. " seconds"
+    local raceMessage = raceName .. "|" .. zone .. "|" .. raceTime
     local sendMessageCommand = "/run C_Club.SendMessage("..clubId..","..streamId..",\""..raceMessage.."\")"
     local hideButtonCommand = "/run " .. raceSubmitButtonName .. ":Hide()"
     local macroText = sendMessageCommand .. "\n" .. hideButtonCommand
