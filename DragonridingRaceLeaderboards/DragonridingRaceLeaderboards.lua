@@ -2,6 +2,7 @@ AppName = "Dragonriding Race Leaderboards"
 DRL = LibStub("AceAddon-3.0"):NewAddon(AppName, "AceEvent-3.0")
 
 local lastQuestAccepted = ""
+local listenForRaceTime = false
 local raceName = ""
 local raceTime = ""
 
@@ -35,6 +36,7 @@ function DRL:OnInitialize()
 
     DRL:RegisterEvent("CHAT_MSG_SYSTEM")
     DRL:RegisterEvent("CHAT_MSG_MONSTER_SAY")
+    DRL:RegisterEvent("UNIT_AURA")
 end
 
 function DRL:OnEnable()    
@@ -106,22 +108,31 @@ function DRL:OnDisable()
 end
 
 function DRL:CHAT_MSG_SYSTEM(event, text)
-    local prefix = "Quest accepted: "
-    if #text >= #prefix and string.sub(text, 1, #prefix) == prefix then
-        lastQuestAccepted = string.sub(text, #prefix, #text)
-        print("Started quest " .. lastQuestAccepted)
+    local questAcceptedPrefix = "Quest accepted: "
+    if #text >= #questAcceptedPrefix and string.sub(text, 1, #questAcceptedPrefix) == questAcceptedPrefix then
+        lastQuestAccepted = string.sub(text, #questAcceptedPrefix, #text)
     end
 end
 
 function DRL:CHAT_MSG_MONSTER_SAY(event, text, name)
-    print("Got event with text: " .. text .. " said by " .. name)        
-    
-    if name == "Bronze Timekeeper" then
-        -- Got event with text: Your race time was 49.441 seconds. Your personal best for this race is 48.455 seconds.
+    if listenForRaceTime and name == "Bronze Timekeeper" then
         local pattern = "Your race time was (%d+\.%d+) seconds"
         local _, _, timeString = string.find(text, pattern)
         if timeString ~= nil then
-            print("Race time was " .. timeString)        
+            print("Race time was " .. timeString)
+            listenForRaceTime = false
+        end
+    end
+end
+
+function DRL:UNIT_AURA(_, target, info)
+    if target == "player" then
+        for _, aura in ipairs(info.addedAuras or {}) do
+            local raceStartingSpellId = 382632
+            if aura.spellId == raceStartingSpellId then
+                raceName = lastQuestAccepted
+                listenForRaceTime = true
+            end
         end
     end
 end
