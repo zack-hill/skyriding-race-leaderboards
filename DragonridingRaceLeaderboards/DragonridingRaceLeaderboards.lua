@@ -1,5 +1,5 @@
 AppName = "Dragonriding Race Leaderboards"
-DRL = LibStub("AceAddon-3.0"):NewAddon(AppName, "AceEvent-3.0")
+DRL = LibStub("AceAddon-3.0"):NewAddon(AppName, "AceConsole-3.0", "AceEvent-3.0")
 
 local lastQuestAccepted = ""
 local listenForRaceTime = false
@@ -35,10 +35,31 @@ local options = {
 function DRL:OnInitialize()
     LibStub("AceConfig-3.0"):RegisterOptionsTable(AppName, options, nil)
     LibStub("AceConfigDialog-3.0"):AddToBlizOptions(AppName, AppName)
+    local bunnyLDB = LibStub("LibDataBroker-1.1"):NewDataObject("Bunnies!", {
+        type = "data source",
+        text = "Bunnies!",
+        icon = "Interface\Icons\INV_Chest_Cloth_17",
+        OnClick = function() print("BUNNIES ARE TAKING OVER THE WORLD") end,
+        })
+    local icon = LibStub("LibDBIcon-1.0")
 
     DRL:RegisterEvent("CHAT_MSG_SYSTEM")
     DRL:RegisterEvent("CHAT_MSG_MONSTER_SAY")
     DRL:RegisterEvent("UNIT_AURA")
+
+     -- Obviously you'll need a ## SavedVariables: BunniesDB line in your TOC, duh!
+     self.db = LibStub("AceDB-3.0"):New("BunniesDB", { profile = { minimap = { hide = false, }, }, })
+     icon:Register("Bunnies!", bunnyLDB, self.db.profile.minimap)
+    --  self:RegisterChatCommand("bunnies", "CommandTheBunnies")
+end
+
+function DRL:CommandTheBunnies() 
+    self.db.profile.minimap.hide = not self.db.profile.minimap.hide
+    if self.db.profile.minimap.hide then
+        icon:Hide("Bunnies!")
+    else
+        icon:Show("Bunnies!") 
+    end
 end
 
 function DRL:OnEnable()
