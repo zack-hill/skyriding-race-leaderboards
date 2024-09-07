@@ -40,10 +40,11 @@ public class Worker : BackgroundService
             _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
             await Task.Delay(1000, stoppingToken);
             
-            // parse data
+            // read file
+            var accountRaceData = ParseData("");
             
             Console.WriteLine("Uploading race data");
-            await UploadRaceData(new AccountRaceData());
+            await UploadRaceData(accountRaceData);
         }
     }
 
@@ -111,6 +112,11 @@ public class Worker : BackgroundService
         File.WriteAllText(filePath, asd);
     }
 
+    private static AccountRaceData ParseData(string data)
+    {
+        return new AccountRaceData();
+    }
+    
     private async Task UploadRaceData(AccountRaceData accountRaceData)
     {
         var uploadUrl = _configuration["UploadUrl"];
