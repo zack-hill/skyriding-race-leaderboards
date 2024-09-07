@@ -14,6 +14,7 @@ public class Program
         Host.CreateDefaultBuilder(args)
             .ConfigureServices((hostContext, services) =>
             {
+                services.AddHttpClient();
                 services.AddHostedService<Worker>();
             });
 }

@@ -1,9 +1,12 @@
 using System;
 using System.IO;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
+using CompanionApp.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -13,11 +16,13 @@ namespace CompanionApp;
 public class Worker : BackgroundService
 {
     private readonly IConfiguration _configuration;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<Worker> _logger;
 
-    public Worker(IConfiguration configuration, ILogger<Worker> logger)
+    public Worker(IConfiguration configuration, IHttpClientFactory httpClientFactory, ILogger<Worker> logger)
     {
         _configuration = configuration;
+        _httpClientFactory = httpClientFactory;
         _logger = logger;
     }
 
@@ -34,6 +39,11 @@ public class Worker : BackgroundService
         {
             _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
             await Task.Delay(1000, stoppingToken);
+            
+            // parse data
+            
+            Console.WriteLine("Uploading race data");
+            await UploadRaceData(new AccountRaceData());
         }
     }
 
@@ -99,5 +109,18 @@ public class Worker : BackgroundService
 
         var asd = JsonSerializer.Serialize(jsonObj);
         File.WriteAllText(filePath, asd);
+    }
+
+    private async Task UploadRaceData(AccountRaceData accountRaceData)
+    {
+        var uploadUrl = _configuration["UploadUrl"];
+        var client = _httpClientFactory.CreateClient();
+        var httpRequestMessage = new HttpRequestMessage
+        {
+            Method = HttpMethod.Post,
+            RequestUri = new Uri(uploadUrl!),
+            Content = JsonContent.Create(accountRaceData)
+        };
+        await client.SendAsync(httpRequestMessage);
     }
 }
