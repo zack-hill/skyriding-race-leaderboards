@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Configuration;
 using System.IO;
-using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
@@ -10,7 +7,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using ConfigurationManager = System.Configuration.ConfigurationManager;
 
 namespace CompanionApp;
 
@@ -27,20 +23,7 @@ public class Worker : BackgroundService
 
     public override Task StartAsync(CancellationToken cancellationToken)
     {
-        var wowDirectoryConfigKey = "WoW.Directory";
-        var wowDirectory = _configuration[wowDirectoryConfigKey];
-        if (!Directory.Exists(wowDirectory))
-        {
-            Console.WriteLine($"Unable to auto-detect WoW directory: {wowDirectory}");
-            Console.WriteLine("Enter your WoW directory, choose the directory that contains the _retail_ folder:");
-            wowDirectory = Console.ReadLine();
-            UpdateAppSettings(wowDirectoryConfigKey, wowDirectory);
-            // SetValueInAppSettings(wowDirectoryConfigKey, wowDirectory);
-        }
-        else
-        {
-            Console.WriteLine($"Using directory: {wowDirectory}");
-        }
+        DetermineWoWDirectory();
         
         return base.StartAsync(cancellationToken);
     }
@@ -54,27 +37,55 @@ public class Worker : BackgroundService
         }
     }
 
-    private static void SetValueInAppSettings(string key, string value)
+    private void DetermineWoWDirectory()
     {
-        try
+        const string wowDirectoryConfigKey = "WoW.Directory";
+        var wowDirectory = _configuration[wowDirectoryConfigKey];
+        
+        // Try auto-detect
+
+        if (string.IsNullOrEmpty(wowDirectory))
         {
-            var configFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-            var settings = configFile.AppSettings.Settings;
-            if (settings[key] == null)
-            {
-                settings.Add(key, value);
-            }
-            else
-            {
-                settings[key].Value = value;
-            }
-            configFile.Save(ConfigurationSaveMode.Modified);
-            ConfigurationManager.RefreshSection(configFile.AppSettings.SectionInformation.Name);
+            Console.WriteLine("Unable to auto-detect WoW directory");
         }
-        catch (ConfigurationErrorsException)
+
+        var updated = false;
+        while (!ValidateWoWDirectory(wowDirectory))
         {
-            Console.WriteLine("Error writing app settings");
+            Console.WriteLine("Enter your WoW directory, choose the directory that contains the _retail_ folder:");
+            wowDirectory = Console.ReadLine();
+            updated = true;
         }
+
+        if (updated)
+        {
+            UpdateAppSettings(wowDirectoryConfigKey, wowDirectory);
+        }
+        
+        Console.WriteLine($"Using directory: {wowDirectory}");
+    }
+
+    private static bool ValidateWoWDirectory(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+        {
+            return false;
+        }
+        
+        if (!Directory.Exists(path))
+        {
+            Console.WriteLine($"Unable to locate directory '{path}'");
+            return false;
+        }
+
+        var retailDir = Path.Combine(path, "_retail_");
+        if (!Directory.Exists(retailDir))
+        {
+            Console.WriteLine($"Unable to locate _retail_ folder at '{retailDir}'");
+            return false;
+        }
+
+        return true;
     }
 
     private static void UpdateAppSettings(string key, string value)
