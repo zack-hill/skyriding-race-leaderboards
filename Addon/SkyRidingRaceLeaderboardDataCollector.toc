@@ -1,0 +1,10 @@
+## Interface: 110002
+## Title: Sky Riding Race Leaderboard Data Collector
+## Author: Zack Hill
+## Notes: Tracks and displays leaderboards for Dragonriding races.
+## Version: 1
+## SavedVariablesPerCharacter: CommunityName
+## SavedVariables: DataCollectorDB
+
+SkyRidingRaceLeaderboardDataCollector.lua
+RaceCurrencies.lua

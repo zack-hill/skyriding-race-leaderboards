@@ -19,10 +19,14 @@ def get_racing_currencies():
         id = int(row['ID'])
         category_id = int(row['CategoryID'])
         name = row['Name_lang']
-        if category_id == 251:
+        if category_id == 251 and name.startswith('Dragon Racing - Personal Best Record'):
             yield RaceCurrency(id, name)
 
 def write_lua(racing_currencies):
+    formatted_string = ",".join([str(racing_currency.id) for racing_currency in racing_currencies])
+    with open("../Addon/RaceCurrencies.lua", "w") as f:
+        f.write("local _, addonData = ...\n")
+        f.write(f"addonData.raceDataCurrencyIds = {{{formatted_string}}}")
     pass
 
 def write_json(racing_currencies):
