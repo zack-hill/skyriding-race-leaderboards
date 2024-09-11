@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using CompanionApp.Models;
@@ -120,7 +120,7 @@ public class Worker : BackgroundService
         var accountRaceData = new AccountRaceData();
         foreach (var line in lines)
         {
-            var parts = line.Split('=');
+            var parts = line.Split('=', 2);
             if (parts.Length < 2)
                 continue;
 
@@ -132,10 +132,11 @@ public class Worker : BackgroundService
             {
                 var characterRaceData = new CharacterRaceData
                 {
-                    CharacterName =  parts[0].Trim().Trim('[').Trim(']').Trim('"').Split('-')[1],
+                    CharacterName =  parts[0].Trim().Trim('[').Trim(']').Trim('"').Split('-', 2)[1],
                 };
-                
-                var json = parts[1].Trim().Trim('"').Replace("\\\"", "\"").Trim(',').Trim('"');
+
+                var base64String = parts[1].Trim().Trim(',').Trim('"');
+                var json = Encoding.UTF8.GetString(Convert.FromBase64String(base64String));
                 var raceDataDictionary = JsonSerializer.Deserialize<Dictionary<string, int>>(json);
                 foreach (var (key, value) in raceDataDictionary)
                 {
