@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using CompanionApp.Models;
@@ -33,15 +35,15 @@ public class Worker : BackgroundService
         return base.StartAsync(cancellationToken);
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        while (!stoppingToken.IsCancellationRequested)
+        while (!cancellationToken.IsCancellationRequested)
         {
             _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-            await Task.Delay(1000, stoppingToken);
+            await Task.Delay(1000, cancellationToken);
             
             // read file
-            var accountRaceData = ParseData("");
+            var accountRaceData = await ParseData(@"C:\Program Files (x86)\World of Warcraft\_retail_\WTF\Account\64201889#2\SavedVariables\SkyRidingRaceLeaderboardDataCollector.lua");
             
             Console.WriteLine("Uploading race data");
             await UploadRaceData(accountRaceData);
@@ -53,7 +55,7 @@ public class Worker : BackgroundService
         const string wowDirectoryConfigKey = "WoW.Directory";
         var wowDirectory = _configuration[wowDirectoryConfigKey];
         
-        // Try auto-detect
+        // TODO: Try auto-detect
 
         if (string.IsNullOrEmpty(wowDirectory))
         {
@@ -112,9 +114,43 @@ public class Worker : BackgroundService
         File.WriteAllText(filePath, asd);
     }
 
-    private static AccountRaceData ParseData(string data)
+    private static async Task<AccountRaceData> ParseData(string filePath)
     {
-        return new AccountRaceData();
+        var lines = await File.ReadAllLinesAsync(filePath);
+        var accountRaceData = new AccountRaceData();
+        foreach (var line in lines)
+        {
+            var parts = line.Split('=');
+            if (parts.Length < 2)
+                continue;
+
+            if (parts[0].Contains("BattleTag"))
+            {
+                accountRaceData.BattleTag = parts[1].Trim().Trim(',').Trim('"');
+            }
+            else if (parts[0].Contains("CharacterRaceData-"))
+            {
+                var characterRaceData = new CharacterRaceData
+                {
+                    CharacterName =  parts[0].Trim().Trim('[').Trim(']').Trim('"').Split('-')[1],
+                };
+                
+                var json = parts[1].Trim().Trim('"').Replace("\\\"", "\"").Trim(',').Trim('"');
+                var raceDataDictionary = JsonSerializer.Deserialize<Dictionary<string, int>>(json);
+                foreach (var (key, value) in raceDataDictionary)
+                {
+                    var raceTime = new RaceTime
+                    {
+                        RaceId = int.Parse(key),
+                        TimeMs = value,
+                    };
+                    characterRaceData.RaceTimes.Add(raceTime);
+                }
+                
+                accountRaceData.CharacterRaceData.Add(characterRaceData);
+            }
+        }
+        return accountRaceData;
     }
     
     private async Task UploadRaceData(AccountRaceData accountRaceData)

@@ -4,6 +4,6 @@ namespace CompanionApp.Models;
 
 public class AccountRaceData
 {
-    public string AccountName { get; set; }
-    public List<RaceTime> RaceTimes { get; set; } = new List<RaceTime>();
+    public string BattleTag { get; set; }
+    public List<CharacterRaceData> CharacterRaceData { get; set; } = [];
 }

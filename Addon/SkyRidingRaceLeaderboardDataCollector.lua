@@ -3,17 +3,22 @@ local addonName, addonData = ...
 function SaveRaceData()
     local _, battleTag = BNGetInfo()
     local characterName = UnitName("player")
-    local characterTimeData = {}
+    
+    DataCollectorDB = DataCollectorDB or {}
+    DataCollectorDB["BattleTag"] = battleTag
+    DataCollectorDB["CharacterRaceData-" .. characterName] = SerializeCharacterRaceData()
+end
 
+function SerializeCharacterRaceData()
+    local serialized = "{"
     for _, currencyId in ipairs(addonData.raceDataCurrencyIds) do
         local quantity = C_CurrencyInfo.GetCurrencyInfo(currencyId).quantity
         if quantity ~= 0 then
-            characterTimeData[currencyId] = quantity
+            serialized = serialized .. "\"" .. currencyId .. "\": " .. quantity .. ","
         end
     end
-    DataCollectorDB = DataCollectorDB or {}
-    DataCollectorDB[battleTag] = DataCollectorDB[battleTag] or {}
-    DataCollectorDB[battleTag][characterName] = characterTimeData
+    serialized = serialized:sub(1, -2) .. "}"
+    return serialized
 end
 
 local function OnEvent(self, event, ...)
