@@ -1,0 +1,18 @@
+{% extends "layout.html" %} {% block content %}
+<table class="table">
+  <th scope="col">Race</th>
+  <th scope="col">Record Time</th>
+  <th scope="col">Player</th>
+  {%for race_time in race_times%}
+  <tr>
+    <th scope="row">
+      <a href="{{url_for('race_leaderboard', race_id=race_time.race_id)}}">
+        {{race_time.race_id}}
+      </a>
+    </th>
+    <td>{{race_time.time_ms}}</td>
+    <td>{{race_time.user_id}}</td>
+  </tr>
+  {%endfor%}
+</table>
+{% endblock %}
