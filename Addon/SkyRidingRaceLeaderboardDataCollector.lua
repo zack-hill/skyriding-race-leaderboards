@@ -32,7 +32,14 @@ function SerializeCharacterRaceData()
             serialized = serialized .. "\"" .. currencyId .. "\": " .. quantity .. ","
         end
     end
-    serialized = serialized:sub(1, -2) .. "}"
+
+    if (serialized:sub(1, -2) == ",")
+    then
+        serialized = serialized:sub(1, -2)
+    end
+    
+    serialized = serialized .. "}"
+    
     return Encode(serialized)
 end
 
