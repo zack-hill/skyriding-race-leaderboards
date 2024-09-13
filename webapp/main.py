@@ -25,12 +25,13 @@ def race_leaderboard():
 def upload_data():
     storage = Storage()
     result = request.get_json()
-    battle_tag = result["BattleTag"]
-    for char_race_data in result["CharacterRaceData"]:
-        character_name = char_race_data["CharacterName"]
-        for race_time in char_race_data["RaceTimes"]:
-            race_id = race_time["RaceId"]
-            time_ms = race_time["TimeMs"]
+    print(result)
+    battle_tag = result["battleTag"]
+    for char_race_data in result["characterRaceData"]:
+        character_name = char_race_data["characterName"]
+        for race_time in char_race_data["raceTimes"]:
+            race_id = race_time["raceId"]
+            time_ms = race_time["timeMs"]
             storage.update_time(battle_tag, race_id, int(time_ms), character_name)
     storage.commit()
     return "", 200

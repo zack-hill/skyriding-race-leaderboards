@@ -1,5 +1,7 @@
 from dataclasses import dataclass
-import sqlite3
+import sqlitecloud
+
+CONNECTION_STRING = "sqlitecloud://cd1rspeeik.sqlite.cloud:8860?apikey=rHyR3deilinIX4nmvGMl7JwawKasBAmJsyba63ORLN8"
 
 
 @dataclass
@@ -24,7 +26,8 @@ class RaceTime:
 
 class Storage:
     def __init__(self) -> None:
-        self._connection = sqlite3.connect("skyriding_data.db")
+        self._connection = sqlitecloud.connect(CONNECTION_STRING)
+        self._connection.execute("USE DATABASE skyriding_data.db")
         cursor = self._connection.cursor()
         cursor.execute(
             """
