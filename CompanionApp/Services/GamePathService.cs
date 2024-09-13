@@ -2,17 +2,35 @@
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Windows.Forms;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
+using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
 
-namespace CompanionApp;
+namespace CompanionApp.Services;
 
-public class GamePathManager
+public class GamePathService
 {
+    public string? GamePath
+    {
+        get => _gamePath;
+        private set
+        {
+            _gamePath = value;
+            IsGamePathValid = ValidateWoWDirectory(value);
+            GamePathUpdated?.Invoke(this, EventArgs.Empty);
+        }
+    }
+    private string? _gamePath;
+
+    public bool IsGamePathValid { get; private set; }
+    
     private const string WowDirectoryConfigKey = "WoW.Directory";
     
     private readonly IConfiguration _configuration;
-    
+    private readonly ILogger<GamePathService> _logger;
+
     private static readonly string[] RegistryKeyLocations =
     [
         @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\World of Warcraft",
@@ -21,57 +39,41 @@ public class GamePathManager
         @"HKEY_CURRENT_USER\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\World of Warcraft"
     ];
 
-    public GamePathManager(IConfiguration configuration)
+    public event EventHandler? GamePathUpdated;
+
+    public GamePathService(IConfiguration configuration, ILogger<GamePathService> logger)
     {
         _configuration = configuration;
+        _logger = logger;
     }
-    
-    public string GetGamePath()
+
+    public void AutoDetectGamePathIfNecessary()
     {
-        var wowDirectory = GetGamePathFromConfig();
-        
-        if (string.IsNullOrEmpty(wowDirectory))
-        {
-            wowDirectory = FindWowInstall();
-            
-            if (ValidateWoWDirectory(wowDirectory))
-            {
-                Console.WriteLine($"Auto detected WoW directory of {wowDirectory}");
-                Console.WriteLine("Is this correct? (Y/N)");
-                while (true)
-                {
-                    var input = Console.ReadLine();
-                    
-                    if (input?.Trim().ToUpper() == "Y")
-                    {
-                        SetGamePathInConfig(wowDirectory!);
-                        return wowDirectory!;
-                    }
-                    
-                    if (input?.Trim().ToUpper() == "N")
-                        break;
+        GamePath = GetGamePathFromConfig();
 
-                    Console.WriteLine("Unrecognized input. Please input 'Y' or 'N'.");
-                }
-            }
-            else
-            {
-                Console.WriteLine("Unable to auto-detect WoW directory");
-            }
+        if (string.IsNullOrEmpty(GamePath))
+        {
+            GamePath = FindWowInstall();
         }
-        else if (ValidateWoWDirectory(wowDirectory))
+        else
         {
-            return wowDirectory;
+            _logger.LogInformation($"Game path set to {GamePath}");
         }
+    }
 
-        do
+    public void BrowseForGamePath()
+    {
+        var folderBrowserDialog = new FolderBrowserDialog
         {
-            Console.WriteLine("Enter your WoW directory, choose the directory that contains the _retail_ folder:");
-            wowDirectory = Console.ReadLine();
-        } while (!ValidateWoWDirectory(wowDirectory));
-
-        SetGamePathInConfig(wowDirectory!);
-        return wowDirectory!;
+            Title = "Select a folder",
+            InitialFolder = GamePath,
+            AllowMultiSelect = false
+        };
+        if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
+        {
+            GamePath = folderBrowserDialog.SelectedFolder;
+            _logger.LogInformation($"Game path set to {GamePath}");
+        }
     }
     
     private string? GetGamePathFromConfig()
@@ -92,13 +94,15 @@ public class GamePathManager
         File.WriteAllText(filePath, asd);
     }
     
-    private static string? FindWowInstall()
+    private string? FindWowInstall()
     {
         foreach (var registryKeyLocation in RegistryKeyLocations)
         {
             var path = Registry.GetValue(registryKeyLocation, "InstallLocation", null)?.ToString();
             if (ValidateWoWDirectory(path))
             {
+                _logger.LogInformation($"Auto detected game path of {path}");
+                SetGamePathInConfig(path!);
                 return path;
             }
         }
@@ -106,7 +110,7 @@ public class GamePathManager
         return null;
     }
 
-    private static bool ValidateWoWDirectory(string? path)
+    private bool ValidateWoWDirectory(string? path)
     {
         if (string.IsNullOrEmpty(path))
         {
@@ -115,14 +119,14 @@ public class GamePathManager
         
         if (!Directory.Exists(path))
         {
-            Console.WriteLine($"Unable to locate directory '{path}'");
+            _logger.LogError($"Unable to locate directory '{path}'");
             return false;
         }
 
         var retailDir = Path.Combine(path, "_retail_");
         if (!Directory.Exists(retailDir))
         {
-            Console.WriteLine($"Unable to locate _retail_ folder at '{retailDir}'");
+            _logger.LogError($"Unable to locate _retail_ folder at '{path}'");
             return false;
         }
 

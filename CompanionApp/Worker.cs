@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using CompanionApp.Models;
+using CompanionApp.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -17,13 +18,24 @@ public class Worker : BackgroundService
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<Worker> _logger;
 
-    private AddonDataManager _addonDataManager;
+    private readonly GamePathService _gamePathService;
+    private readonly TrayIconService _trayIconService;
+    private readonly AddonDataService _addonDataService;
     private readonly TimeSpan _scanInterval;
 
-    public Worker(IConfiguration configuration, IHttpClientFactory httpClientFactory, ILogger<Worker> logger)
+    public Worker(
+        IConfiguration configuration,
+        IHttpClientFactory httpClientFactory,
+        GamePathService gamePathService,
+        TrayIconService trayIconService,
+        AddonDataService addonDataService,
+        ILogger<Worker> logger)
     {
         _configuration = configuration;
         _httpClientFactory = httpClientFactory;
+        _gamePathService = gamePathService;
+        _trayIconService = trayIconService;
+        _addonDataService = addonDataService;
         _logger = logger;
 
         if (!int.TryParse(_configuration["ScanIntervalSeconds"], out var scanIntervalSeconds) ||
@@ -34,11 +46,9 @@ public class Worker : BackgroundService
 
     public override Task StartAsync(CancellationToken cancellationToken)
     {
-        var wowPath = new GamePathManager(_configuration).GetGamePath();
-        Console.Clear();
-        _logger.LogInformation($"Using directory: {wowPath}");
-
-        _addonDataManager = new AddonDataManager(wowPath);
+        _logger.LogInformation("Starting up");
+        _trayIconService.CreateTrayIcon();
+        _gamePathService.AutoDetectGamePathIfNecessary();
         
         return base.StartAsync(cancellationToken);
     }
@@ -47,7 +57,7 @@ public class Worker : BackgroundService
     {
         while (!cancellationToken.IsCancellationRequested)
         {
-            var addonDataToUpload = _addonDataManager.GetAddonDataToUpload();
+            var addonDataToUpload = _addonDataService.GetAddonDataToUpload();
             await foreach (var addonFileData in addonDataToUpload)
             {
                 try
@@ -60,7 +70,7 @@ public class Worker : BackgroundService
                     _logger.LogError($"Failed to upload race data: {ex.Message}");
                     
                     // Reset our tracking data for this file to allow additional upload attempts
-                    _addonDataManager.ResetFileTracking(addonFileData.FilePath);
+                    _addonDataService.ResetFileTracking(addonFileData.FilePath);
                 }
             }
             

@@ -7,16 +7,16 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using CompanionApp.Models;
 
-namespace CompanionApp;
+namespace CompanionApp.Services;
 
-public class AddonDataManager
+public class AddonDataService
 {
-    private readonly string _wowPath;
+    private readonly GamePathService _gamePathService;
     private readonly Dictionary<string, DateTime> _lastWriteTimeLookup = new();
     
-    public AddonDataManager(string wowPath)
+    public AddonDataService(GamePathService gamePathService)
     {
-        _wowPath = wowPath;
+        _gamePathService = gamePathService;
     }
     
     public async IAsyncEnumerable<AddonFileData> GetAddonDataToUpload()
@@ -52,7 +52,11 @@ public class AddonDataManager
 
     private IEnumerable<string> EnumerateAddonFiles()
     {
-        var wtfAccountDirectory = Path.Combine(_wowPath, @"_retail_\WTF\Account");
+        var gamePath = _gamePathService.GamePath;
+        if (gamePath == null)
+            return Enumerable.Empty<string>();
+        
+        var wtfAccountDirectory = Path.Combine(gamePath, @"_retail_\WTF\Account");
         return Directory.EnumerateFiles(
             wtfAccountDirectory,
             "SkyRidingRaceLeaderboardDataCollector.lua",
