@@ -33,7 +33,7 @@ function SerializeCharacterRaceData()
         end
     end
 
-    if (serialized:sub(1, -2) == ",")
+    if (serialized:sub(-1, serialized:len()) == ",")
     then
         serialized = serialized:sub(1, -2)
     end
