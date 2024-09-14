@@ -1,9 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Windows.Forms;
-using Microsoft.Extensions.Configuration;
+using CompanionApp.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using FolderBrowserDialog = FolderBrowserEx.FolderBrowserDialog;
@@ -28,7 +27,6 @@ public class GamePathService
     
     private const string WowDirectoryConfigKey = "WoW.Directory";
     
-    private readonly IConfiguration _configuration;
     private readonly ILogger<GamePathService> _logger;
 
     private static readonly string[] RegistryKeyLocations =
@@ -41,9 +39,8 @@ public class GamePathService
 
     public event EventHandler? GamePathUpdated;
 
-    public GamePathService(IConfiguration configuration, ILogger<GamePathService> logger)
+    public GamePathService(ILogger<GamePathService> logger)
     {
-        _configuration = configuration;
         _logger = logger;
     }
 
@@ -78,20 +75,25 @@ public class GamePathService
     
     private string? GetGamePathFromConfig()
     {
-        return _configuration[WowDirectoryConfigKey];
+        var filePath = Path.Combine(AppContext.BaseDirectory, "userSettings.json");
+        try
+        {
+            var json = File.ReadAllText(filePath);
+            var userSettings = JsonSerializer.Deserialize<UserSettings>(json);
+            return userSettings?.GamePath;
+        }
+        catch (IOException ex)
+        {
+            _logger.LogError(ex, $"Error reading user settings {GamePath}");
+            return null;
+        }
     }
 
     private static void SetGamePathInConfig(string value)
     {
-        var filePath = Path.Combine(AppContext.BaseDirectory, "appSettings.json");
-        var json = File.ReadAllText(filePath);
-        var jsonObj = JsonSerializer.Deserialize<JsonNode>(json);
-        var sectionPath = WowDirectoryConfigKey.Split(":")[0];
-        
-        jsonObj![sectionPath] = value;
-
-        var asd = JsonSerializer.Serialize(jsonObj);
-        File.WriteAllText(filePath, asd);
+        var filePath = Path.Combine(AppContext.BaseDirectory, "userSettings.json");
+        var serialized = JsonSerializer.Serialize(new UserSettings { GamePath = value});
+        File.WriteAllText(filePath, serialized);
     }
     
     private string? FindWowInstall()

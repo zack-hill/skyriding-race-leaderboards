@@ -1,6 +1,8 @@
 using CompanionApp.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Http;
 using Serilog;
 
 namespace CompanionApp;
@@ -19,6 +21,7 @@ public class Program
                 services.AddSerilog((_, configuration) =>
                     configuration.ReadFrom.Configuration(hostContext.Configuration));
                 services.AddHttpClient();
+                services.RemoveAll<IHttpMessageHandlerBuilderFilter>();
                 services.AddSingleton<GamePathService>();
                 services.AddSingleton<TrayIconService>();
                 services.AddSingleton<AddonDataService>();

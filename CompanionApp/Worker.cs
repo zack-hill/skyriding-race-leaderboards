@@ -58,20 +58,28 @@ public class Worker : BackgroundService
         while (!cancellationToken.IsCancellationRequested)
         {
             var addonDataToUpload = _addonDataService.GetAddonDataToUpload();
-            await foreach (var addonFileData in addonDataToUpload)
+            try
             {
-                try
+                await foreach (var addonFileData in addonDataToUpload.WithCancellation(cancellationToken))
                 {
-                    _logger.LogInformation($"Uploading race data for {addonFileData.AccountRaceData.BattleTag}");
-                    await UploadRaceData(addonFileData.AccountRaceData);
+                    try
+                    {
+                        _logger.LogInformation($"Uploading race data for {addonFileData.AccountRaceData.BattleTag}");
+                        await UploadRaceData(addonFileData.AccountRaceData);
+                        _logger.LogInformation($"Race data uploaded successfully");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"Failed to upload race data: {ex.Message}");
+
+                        // Reset our tracking data for this file to allow additional upload attempts
+                        _addonDataService.ResetFileTracking(addonFileData.FilePath);
+                    }
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError($"Failed to upload race data: {ex.Message}");
-                    
-                    // Reset our tracking data for this file to allow additional upload attempts
-                    _addonDataService.ResetFileTracking(addonFileData.FilePath);
-                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to parse addon data: {ex.Message}");
             }
             
             await Task.Delay(_scanInterval, cancellationToken);
