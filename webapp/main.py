@@ -5,14 +5,15 @@ from storage import Storage
 app = Flask(__name__)
 bootstrap = Bootstrap5(app)
 
+storage = Storage()
+all_race_info = storage.get_all_race_info()
+
 
 @app.route("/")
 def index():
     storage = Storage()
-    race_times = storage.get_all_races()
-    for race_time in race_times:
-        time_disp = format_time(race_time.time_ms)
-        race_time.time_disp = time_disp
+    race_times = storage.get_all_race_times()
+    format_race_times(race_times)
     return render_template("index.html", race_times=race_times)
 
 
@@ -21,10 +22,15 @@ def race_leaderboard():
     race_id = request.args.get("race_id")
     storage = Storage()
     race_times = storage.get_race_times(race_id)
-    for race_time in race_times:
-        time_disp = format_time(race_time.time_ms)
-        race_time.time_disp = time_disp
-    return render_template("leaderboard.html", race_id=race_id, race_times=race_times)
+    format_race_times(race_times)
+    race_name = race_id
+    race_info = all_race_info.get(race_id)
+    if race_info is not None:
+        race_name = race_info.name
+        print(race_name)
+    return render_template(
+        "leaderboard.html", race_name=race_name, race_times=race_times
+    )
 
 
 @app.route("/upload", methods=["POST"])
@@ -54,3 +60,13 @@ def format_time(time_ms) -> str:
         result_str += f"{int(minutes)}:"
     result_str += f"{round(seconds, 3):.3f}"
     return result_str
+
+
+def format_race_times(race_times):
+    for race_time in race_times:
+        time_disp = format_time(race_time.time_ms)
+        race_time.time_disp = time_disp
+        race_info = all_race_info.get(race_time.race_id)
+        race_time.race_name = race_time.race_id
+        if race_info is not None:
+            race_time.race_name = race_info.name

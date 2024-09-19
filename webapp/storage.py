@@ -5,9 +5,10 @@ CONNECTION_STRING = "sqlitecloud://cd1rspeeik.sqlite.cloud:8860?apikey=rHyR3deil
 
 
 @dataclass
-class Race:
+class RaceInfo:
     race_id: str
     name: str
+    race_type: str
 
 
 @dataclass
@@ -49,9 +50,10 @@ class Storage:
         )
         cursor.execute(
             """
-            CREATE TABLE IF NOT EXISTS race(
+            CREATE TABLE IF NOT EXISTS race_info(
                 race_id STR,
-                name STR
+                name STR,
+                type STR
             )
             """
         )
@@ -103,7 +105,21 @@ class Storage:
             race_times.append(RaceTime(race_id, user_id, time_ms, character_name))
         return race_times
 
-    def get_all_races(self) -> list[Race]:
+    def get_all_race_info(self) -> dict[str, RaceInfo]:
+        cursor = self._connection.cursor()
+        result = cursor.execute(
+            """
+            SELECT race_id, name, type
+            FROM race_info 
+            """
+        )
+        rows = result.fetchall()
+        race_info_dict = {}
+        for race_id, race_name, race_type in rows:
+            race_info_dict[str(race_id)] = RaceInfo(str(race_id), race_name, race_type)
+        return race_info_dict
+
+    def get_all_race_times(self) -> list[RaceTime]:
         cursor = self._connection.cursor()
         result = cursor.execute(
             """
@@ -114,7 +130,7 @@ class Storage:
         )
         race_times: list[RaceTime] = []
         for user_id, race_id, time_ms, character_name in result.fetchall():
-            race_times.append(RaceTime(race_id, user_id, time_ms, character_name))
+            race_times.append(RaceTime(str(race_id), user_id, time_ms, character_name))
         return race_times
 
     def get_time(self, user_id: str, race_id: str) -> int | None:
