@@ -14,6 +14,7 @@ def index():
     storage = Storage()
     race_times = storage.get_all_race_times()
     format_race_times(race_times)
+    race_times.sort(key=lambda x: x.race_name)
     return render_template("index.html", race_times=race_times)
 
 
@@ -27,9 +28,12 @@ def race_leaderboard():
     race_info = all_race_info.get(race_id)
     if race_info is not None:
         race_name = race_info.name
-        print(race_name)
+        race_type = race_info.type
     return render_template(
-        "leaderboard.html", race_name=race_name, race_times=race_times
+        "leaderboard.html",
+        race_name=race_name,
+        race_type=race_type,
+        race_times=race_times,
     )
 
 
@@ -51,15 +55,7 @@ def upload_data():
 
 def format_time(time_ms) -> str:
     time_s = time_ms / 1000
-    hours, rem = divmod(time_s, 3600)
-    minutes, seconds = divmod(rem, 60)
-    result_str = ""
-    if hours > 0:
-        result_str += f"{int(hours)}:"
-    if minutes > 0:
-        result_str += f"{int(minutes)}:"
-    result_str += f"{round(seconds, 3):.3f}"
-    return result_str
+    return f"{round(time_s, 3):.3f}s"
 
 
 def format_race_times(race_times):
@@ -70,3 +66,4 @@ def format_race_times(race_times):
         race_time.race_name = race_time.race_id
         if race_info is not None:
             race_time.race_name = race_info.name
+            race_time.race_type = race_info.type

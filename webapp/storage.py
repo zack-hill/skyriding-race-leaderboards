@@ -8,7 +8,7 @@ CONNECTION_STRING = "sqlitecloud://cd1rspeeik.sqlite.cloud:8860?apikey=rHyR3deil
 class RaceInfo:
     race_id: str
     name: str
-    race_type: str
+    type: str
 
 
 @dataclass
