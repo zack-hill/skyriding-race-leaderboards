@@ -23,7 +23,11 @@
   </head>
   <body>
     {%block navigation %}
-    <a href="{{url_for('index')}}"> Home </a>
+    <div class="row justify-content-center">
+      <div class="col-auto">
+        <a href="{{url_for('index')}}"> Home </a>
+      </div>
+    </div>
     {% endblock %} {% block content %}{% endblock %} {% block scripts %} {{
     bootstrap.load_js() }} {% endblock %}
   </body>
