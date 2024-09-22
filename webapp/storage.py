@@ -5,21 +5,15 @@ CONNECTION_STRING = "sqlitecloud://cd1rspeeik.sqlite.cloud:8860?apikey=rHyR3deil
 
 
 @dataclass
-class RaceInfo:
-    race_id: str
-    name: str
-    type: str
+class CourseInfo:
+    course_id: str
+    race_name: str
+    course_type: str
 
 
 @dataclass
-class User:
-    user_id: str
-    name: str
-
-
-@dataclass
-class RaceTime:
-    race_id: str
+class CourseTime:
+    course_id: str
     user_id: str
     time_ms: int
     character_name: str
@@ -32,9 +26,9 @@ class Storage:
         cursor = self._connection.cursor()
         cursor.execute(
             """
-            CREATE TABLE IF NOT EXISTS race_time(
+            CREATE TABLE IF NOT EXISTS course_time(
                 user_id STR,
-                race_id STR,
+                course_id STR,
                 time_ms INT,
                 character_name STR
             )
@@ -42,18 +36,10 @@ class Storage:
         )
         cursor.execute(
             """
-            CREATE TABLE IF NOT EXISTS user(
-                user_id STR,
-                name STR
-            )
-            """
-        )
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS race_info(
-                race_id STR,
-                name STR,
-                type STR
+            CREATE TABLE IF NOT EXISTS course_info(
+                course_id STR,
+                race_name STR,
+                course_type STR
             )
             """
         )
@@ -62,88 +48,65 @@ class Storage:
     def commit(self) -> None:
         self._connection.commit()
 
-    def add_user(self, user_id: str, name: str) -> None:
-        cursor = self._connection.cursor()
-        cursor.execute(
-            """
-            INSERT INTO user VALUES(?, ?)
-            """,
-            (user_id, name),
-        )
-
-    def get_user(self, user_id: str) -> User | None:
-        cursor = self._connection.cursor()
-        result = cursor.execute(
-            """
-            SELECT * 
-            FROM user
-            WHERE user_id = ?
-            """,
-            user_id,
-        )
-        user_row = result.fetchone()
-        if user_row is None:
-            return None
-        return User(*user_row)
-
-    def add_race(self, race_id: str, name: str) -> None: ...
-
-    # TODO: Allow getting windows of data
-    def get_race_times(self, race_id: str) -> None:
+    def get_course_times(self, course_id: str) -> list[CourseTime]:
         cursor = self._connection.cursor()
         result = cursor.execute(
             """
             SELECT user_id, time_ms, character_name
-            FROM race_time 
-            WHERE race_id = ?
+            FROM course_time 
+            WHERE course_id = ?
             ORDER BY time_ms ASC
             """,
-            (race_id,),
+            (course_id,),
         )
-        race_times: list[RaceTime] = []
+        course_times: list[CourseTime] = []
         for user_id, time_ms, character_name in result.fetchall():
-            race_times.append(RaceTime(race_id, user_id, time_ms, character_name))
-        return race_times
+            course_times.append(CourseTime(course_id, user_id, time_ms, character_name))
+        return course_times
 
-    def get_all_race_info(self) -> dict[str, RaceInfo]:
+    def get_all_course_info(self) -> dict[str, CourseInfo]:
         cursor = self._connection.cursor()
         result = cursor.execute(
             """
-            SELECT race_id, name, type
-            FROM race_info 
+            SELECT course_id, race_name, course_type
+            FROM course_info 
             """
         )
         rows = result.fetchall()
-        race_info_dict = {}
-        for race_id, race_name, race_type in rows:
-            race_info_dict[str(race_id)] = RaceInfo(str(race_id), race_name, race_type)
-        return race_info_dict
+        course_info_dict = {}
+        for course_id, race_name, course_type in rows:
+            course_info_dict[str(course_id)] = CourseInfo(
+                str(course_id), race_name, course_type
+            )
+        return course_info_dict
 
-    def get_all_race_times(self) -> list[RaceTime]:
+    def get_all_course_records(self) -> list[CourseTime]:
         cursor = self._connection.cursor()
         result = cursor.execute(
             """
-            SELECT user_id, race_id, MIN(time_ms), character_name
-            FROM race_time 
-            GROUP BY race_id
+            SELECT user_id, course_id, MIN(time_ms), character_name
+            FROM course_time 
+            GROUP BY course_id
             """
         )
-        race_times: list[RaceTime] = []
-        for user_id, race_id, time_ms, character_name in result.fetchall():
-            race_times.append(RaceTime(str(race_id), user_id, time_ms, character_name))
-        return race_times
+        course_times: list[CourseTime] = []
+        for user_id, course_id, time_ms, character_name in result.fetchall():
+            course_times.append(
+                CourseTime(str(course_id), user_id, time_ms, character_name)
+            )
+        return course_times
 
-    def get_time(self, user_id: str, race_id: str) -> int | None:
+    def get_time(self, user_id: str, course_id: str) -> int | None:
         cursor = self._connection.cursor()
         result = cursor.execute(
             """
             SELECT time_ms 
-            FROM race_time 
+            FROM course_time 
             WHERE 
                 user_id = ? AND
-                race_id = ?
+                course_id = ?
             """,
-            (user_id, race_id),
+            (user_id, course_id),
         )
         time_ms = result.fetchone()
         if time_ms is None:
@@ -152,29 +115,29 @@ class Storage:
 
     # TODO: Batch these calls
     def update_time(
-        self, user_id: str, race_id: str, time_ms: int, character_name: str
+        self, user_id: str, course_id: str, time_ms: int, character_name: str
     ) -> None:
-        current_time = self.get_time(user_id, race_id)
+        current_time = self.get_time(user_id, course_id)
         cursor = self._connection.cursor()
         if current_time is None:
             cursor.execute(
                 """
-                INSERT INTO race_time VALUES(?, ?, ?, ?)
+                INSERT INTO course_time VALUES(?, ?, ?, ?)
                 """,
-                (user_id, race_id, time_ms, character_name),
+                (user_id, course_id, time_ms, character_name),
             )
             return
         if current_time < time_ms:
             return
         cursor.execute(
             """
-            UPDATE race_time
+            UPDATE course_time
             SET 
                 time_ms = ?,
                 character_name = ?
             WHERE
                 user_id = ? AND
-                race_id = ?
+                course_id = ?
             """,
-            (time_ms, character_name, user_id, race_id),
+            (time_ms, character_name, user_id, course_id),
         )

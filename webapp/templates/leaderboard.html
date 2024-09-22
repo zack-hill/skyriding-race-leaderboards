@@ -1,16 +1,16 @@
 {% extends "layout.html" %} {% block content %}
 <div class="row justify-content-center">
   <div class="col-auto">
-    <h1>{{race_name}} - {{race_type}}</h2>
+    <h1>{{course_info.race_name}} - {{course_info.course_type}}</h2>
     <table class="table">
       <th scope="col">#</th>
       <th scope="col">Player</th>
       <th scope="col">Time</th>
-      {%for race_time in race_times%}
+      {%for course_time in course_times%}
         <tr>
           <th scope="row">{{loop.index}}</th>
-          <td>{{race_time.user_id}}</td>
-          <td>{{race_time.time_disp}}</td>
+          <td>{{course_time.user_id}}</td>
+          <td>{{course_time.time_disp}}</td>
         </tr>
       {%endfor%}
     </table>

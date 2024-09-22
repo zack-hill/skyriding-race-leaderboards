@@ -1,39 +1,62 @@
+from dataclasses import dataclass
 from flask import Flask, request, render_template
 from flask_bootstrap import Bootstrap5
-from storage import Storage
+from storage import Storage, CourseInfo
 
 app = Flask(__name__)
 bootstrap = Bootstrap5(app)
 
 storage = Storage()
-all_race_info = storage.get_all_race_info()
+all_course_info = storage.get_all_course_info()
+
+
+@dataclass
+class CourseRecord:
+    user_id: str
+    course_id: str
+    time_disp: str
+    character_name: str
+    race_name: str
+    course_type: str
 
 
 @app.route("/")
 def index():
     storage = Storage()
-    race_times = storage.get_all_race_times()
-    format_race_times(race_times)
-    race_times.sort(key=lambda x: x.race_name)
-    return render_template("index.html", race_times=race_times)
+    course_times = storage.get_all_course_records()
+    course_records: list[CourseRecord] = []
+    for course_time in course_times:
+        course_record = CourseRecord(
+            user_id=course_time.user_id,
+            course_id=course_time.course_id,
+            time_disp=format_time(course_time.time_ms),
+            character_name=course_time.character_name,
+            race_name=course_time.course_id,
+            course_type="",
+        )
+        course_info = all_course_info.get(course_time.course_id)
+        if course_info is not None:
+            course_record.race_name = course_info.race_name
+            course_record.course_type = course_info.course_type
+        course_records.append(course_record)
+    course_records.sort(key=lambda x: x.race_name)
+    return render_template("index.html", course_records=course_records)
 
 
-@app.route("/race_leaderboard", methods=["GET"])
-def race_leaderboard():
-    race_id = request.args.get("race_id")
+@app.route("/course_leaderboard", methods=["GET"])
+def course_leaderboard():
+    course_id = request.args.get("course_id")
     storage = Storage()
-    race_times = storage.get_race_times(race_id)
-    format_race_times(race_times)
-    race_name = race_id
-    race_info = all_race_info.get(race_id)
-    if race_info is not None:
-        race_name = race_info.name
-        race_type = race_info.type
+    course_times = storage.get_course_times(course_id)
+    for course_time in course_times:
+        course_time.time_disp = format_time(course_time.time_ms)
+    course_info = all_course_info.get(course_id)
+    if course_info is None:
+        course_info = CourseInfo(course_id, course_id, "")
     return render_template(
         "leaderboard.html",
-        race_name=race_name,
-        race_type=race_type,
-        race_times=race_times,
+        course_info=course_info,
+        course_times=course_times,
     )
 
 
@@ -45,10 +68,10 @@ def upload_data():
     battle_tag = result["battleTag"]
     for char_race_data in result["characterRaceData"]:
         character_name = char_race_data["characterName"]
-        for race_time in char_race_data["raceTimes"]:
-            race_id = race_time["raceId"]
-            time_ms = race_time["timeMs"]
-            storage.update_time(battle_tag, race_id, int(time_ms), character_name)
+        for course_time in char_race_data["courseTimes"]:
+            course_id = course_time["courseId"]
+            time_ms = course_time["timeMs"]
+            storage.update_time(battle_tag, course_id, int(time_ms), character_name)
     storage.commit()
     return "", 200
 
@@ -56,14 +79,3 @@ def upload_data():
 def format_time(time_ms) -> str:
     time_s = time_ms / 1000
     return f"{round(time_s, 3):.3f}s"
-
-
-def format_race_times(race_times):
-    for race_time in race_times:
-        time_disp = format_time(race_time.time_ms)
-        race_time.time_disp = time_disp
-        race_info = all_race_info.get(race_time.race_id)
-        race_time.race_name = race_time.race_id
-        if race_info is not None:
-            race_time.race_name = race_info.name
-            race_time.race_type = race_info.type
