@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -99,16 +99,16 @@ public class AddonDataService
                 {
                     foreach (var (key, value) in raceDataDictionary)
                     {
-                        var raceTime = new RaceTime
+                        var raceTime = new CourseTime
                         {
-                            RaceId = int.Parse(key),
+                            CourseId = int.Parse(key),
                             TimeMs = value,
                         };
-                        characterRaceData.RaceTimes.Add(raceTime);
+                        characterRaceData.CourseTimes.Add(raceTime);
                     }
                 }
 
-                if (characterRaceData.RaceTimes.Count == 0)
+                if (characterRaceData.CourseTimes.Count == 0)
                     continue;
 
                 accountRaceData.CharacterRaceData.Add(characterRaceData);
