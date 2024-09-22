@@ -1,9 +1,11 @@
-#define MyAppName "SRL Companion App"
-#define MyAppExeName "SRLCompanionApp.exe"
+#define MyAppName "Skyriding Race Leaderboards Companion App"
+#define MyAppExeName "SkyridingRaceLeaderboardsCompanionApp.exe"
+#define SourceDir = "bin\net8.0-windows\win-x64\publish"
+#define AppExeVersion = GetVersionNumbersString("D:\dev\repos\skyriding-race-leaderboards\CompanionApp\bin\Debug\net8.0-windows\SkyridingRaceLeaderboardsCompanionApp.exe")
 
 [Setup]
 AppName={#MyAppName}
-AppVersion=1.0
+AppVersion={#AppExeVersion}
 WizardStyle=modern
 SourceDir=..\
 DefaultDirName={autopf}\{#MyAppName}
@@ -20,7 +22,7 @@ PrivilegesRequired=lowest
 SetupIconFile=Resources\favicon.ico
 
 [Files]
-Source: "bin\net8.0-windows\win-x64\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"

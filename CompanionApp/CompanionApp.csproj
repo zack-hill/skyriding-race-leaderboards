@@ -4,7 +4,8 @@
     <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <OutputType>WinExe</OutputType>
-    <AssemblyName>SRLCompanionApp</AssemblyName>
+    <Version>1.0.0</Version>
+    <AssemblyName>SkyridingRaceLeaderboardsCompanionApp</AssemblyName>
     <ApplicationIcon>Resources\favicon.ico</ApplicationIcon>
   </PropertyGroup>
 
