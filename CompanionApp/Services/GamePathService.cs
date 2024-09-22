@@ -62,7 +62,7 @@ public class GamePathService
     {
         var folderBrowserDialog = new FolderBrowserDialog
         {
-            Title = "Select a folder",
+            Title = "Select your WoW directory (contains _retail_)",
             InitialFolder = GamePath,
             AllowMultiSelect = false
         };

@@ -4,9 +4,9 @@ function SaveRaceData()
     local _, battleTag = BNGetInfo()
     local characterName = UnitName("player")
 
-    DataCollectorDB = DataCollectorDB or {}
-    DataCollectorDB["BattleTag"] = battleTag
-    DataCollectorDB["CharacterRaceData-" .. characterName] = SerializeCharacterRaceData()
+    SkyridingRaceLeaderboardsDB = SkyridingRaceLeaderboardsDB or {}
+    SkyridingRaceLeaderboardsDB["BattleTag"] = battleTag
+    SkyridingRaceLeaderboardsDB["CharacterRaceData-" .. characterName] = SerializeCharacterRaceData()
 end
 
 local characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'

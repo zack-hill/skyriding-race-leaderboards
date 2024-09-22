@@ -1,7 +1,8 @@
 #define MyAppName "Skyriding Race Leaderboards Companion App"
+#define MyAppNameNoSpaces "SkyridingRaceLeaderboardsCompanionApp"
 #define MyAppExeName "SkyridingRaceLeaderboardsCompanionApp.exe"
 #define SourceDir = "bin\net8.0-windows\win-x64\publish"
-#define AppExeVersion = GetVersionNumbersString("D:\dev\repos\skyriding-race-leaderboards\CompanionApp\bin\Debug\net8.0-windows\SkyridingRaceLeaderboardsCompanionApp.exe")
+#define AppExeVersion = GetVersionNumbersString("..\" + SourceDir + "\SkyridingRaceLeaderboardsCompanionApp.exe")
 
 [Setup]
 AppName={#MyAppName}
@@ -15,7 +16,7 @@ UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2
 SolidCompression=yes
 OutputDir=Setup\Output\
-OutputBaseFilename={#MyAppName} Setup
+OutputBaseFilename={#MyAppNameNoSpaces}-{#AppExeVersion}-Setup
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=lowest

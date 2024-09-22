@@ -26,7 +26,7 @@ public class TrayIconService : IDisposable
         _trayIcon = new TrayIconWithContextMenu
         {
             Icon = icon.Handle,
-            ToolTip = "Skyriding Race Leaderboards Data Uploader",
+            ToolTip = "Skyriding Race Leaderboards Companion App",
         };
         RebuildTrayIconContextMenu();
         _trayIcon.Create();
