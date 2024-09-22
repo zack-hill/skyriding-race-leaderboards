@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, redirect
 from flask_bootstrap import Bootstrap5
 from storage import Storage, CourseInfo
 
@@ -8,6 +8,9 @@ bootstrap = Bootstrap5(app)
 
 storage = Storage()
 all_course_info = storage.get_all_course_info()
+
+APP_DOWNLOAD_LINK = "https://www.dropbox.com/scl/fi/9b7s6mlg1z1jeacn00lje/SRL-Companion-App-Setup.exe?rlkey=09tyuov77v648xiygcskiqrrs&st=j51ww3ld&dl=1"
+ADDON_DOWNLOAD_LINK = "https://www.dropbox.com/scl/fi/gixytd2boxdr9xs3d8mrt/Addon.zip?rlkey=mff2qthz7i4gljy02n6x5qnim&st=olx4h34i&dl=1"
 
 
 @dataclass
@@ -58,6 +61,19 @@ def course_leaderboard():
         course_info=course_info,
         course_times=course_times,
     )
+
+
+@app.route("/download", methods=["GET"])
+def download():
+    file_type = request.args.get("file")
+    location = None
+    if file_type == "app":
+        location = APP_DOWNLOAD_LINK
+    if file_type == "addon":
+        location = ADDON_DOWNLOAD_LINK
+    if location == None:
+        return "Unknown download type", 404
+    return redirect(location)
 
 
 @app.route("/upload", methods=["POST"])

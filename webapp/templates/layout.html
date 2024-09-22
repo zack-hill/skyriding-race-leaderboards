@@ -25,7 +25,18 @@
     {%block navigation %}
     <div class="row justify-content-center">
       <div class="col-auto">
-        <a href="{{url_for('index')}}"> Home </a>
+        <nav class="navbar navbar-expand-lg">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="{{url_for('index')}}"> Home </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{url_for('download', file='app')}}">
+                Download App
+              </a>
+            </li>
+          </ul>
+        </nav>
       </div>
     </div>
     {% endblock %} {% block content %}{% endblock %} {% block scripts %} {{
