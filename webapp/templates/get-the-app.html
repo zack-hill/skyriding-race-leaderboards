@@ -1,0 +1,44 @@
+{% extends "layout.html" %} {% block content %}
+<div class="row justify-content-center">
+  <div class="col-auto">
+    <h1 id="installing-the-companion-app">Installing the Companion App</h1>
+    <ol>
+      <li>
+        <a href="{{url_for('download', file='app')}}"> Download the app </a>
+      </li>
+      <li>Run the installer</li>
+      <li>
+        After installation, right click the icon for Skyriding Race Leaderboards
+        Companion App in the tray <br />
+        <img src="static/tutorial-image.png"></img>
+      </li>
+      <li>
+        If your WoW directory is not correct, click on it and choose the correct
+        directory. Note: choose the directory which contains the
+        <code>_retail_</code> directory.
+      </li>
+    </ol>
+    <h1 id="installing-the-addon">Installing the Addon</h1>
+    <ol>
+      <li>
+        Right click the icon for Skyriding Race Leaderboards Companion App in
+        the tray <br />
+        <img src="static/tutorial-image.png"></img>
+      </li>
+      <li>Choose the <code>Install/Update Addon</code> option</li>
+      <li>Done!</li>
+    </ol>
+    <h1 id="using-the-addon">Using the Addon</h1>
+    <ul>
+      <li>
+        The addon captures and saves race data when you log out or reload your
+        ui (<code>/reloadui</code>).
+      </li>
+      <li>
+        After doing one of these, go to the <a href="{{url_for('index')}}">Home</a> 
+        page to confirm that your data has been uploaded
+      </li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
