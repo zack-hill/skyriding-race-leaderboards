@@ -1,0 +1,9 @@
+## Interface: 110002
+## Title: Skyriding Race Leaderboards
+## Author: Zack Hill
+## Notes: Collects Skyriding race times
+## Version: 1
+## SavedVariables: SkyridingRaceLeaderboardsDB
+
+SkyridingRaceLeaderboards.lua
+RaceCurrencies.lua
