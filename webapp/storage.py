@@ -106,7 +106,7 @@ class Storage:
                 user_id = ? AND
                 course_id = ?
             """,
-            (user_id, course_id),
+            (user_id, course_id),  # type: ignore
         )
         time_ms = result.fetchone()
         if time_ms is None:
@@ -124,7 +124,7 @@ class Storage:
                 """
                 INSERT INTO course_time VALUES(?, ?, ?, ?)
                 """,
-                (user_id, course_id, time_ms, character_name),
+                (user_id, course_id, time_ms, character_name),  # type: ignore
             )
             return
         if current_time < time_ms:
@@ -139,5 +139,5 @@ class Storage:
                 user_id = ? AND
                 course_id = ?
             """,
-            (time_ms, character_name, user_id, course_id),
+            (time_ms, character_name, user_id, course_id),  # type: ignore
         )

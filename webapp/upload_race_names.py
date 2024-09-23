@@ -17,5 +17,5 @@ for course_info in all_course_info[1:]:
         """
         INSERT INTO course_info VALUES(?, ?, ?)
         """,
-        (course_id, race_name, course_type),
+        (course_id, race_name, course_type),  # type: ignore
     )

@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from flask import Flask, request, render_template, redirect
 from flask_bootstrap import Bootstrap5
 from storage import Storage, CourseInfo
@@ -21,6 +21,15 @@ class CourseRecord:
     character_name: str
     race_name: str
     course_type: str
+
+
+@dataclass
+class CourseTimeDisplay:
+    course_id: str
+    user_id: str
+    time_ms: int
+    time_disp: str
+    character_name: str
 
 
 @app.route("/")
@@ -49,17 +58,23 @@ def index():
 @app.route("/course_leaderboard", methods=["GET"])
 def course_leaderboard():
     course_id = request.args.get("course_id")
+    if course_id is None:
+        return "Course ID couldn't be found", 404
     storage = Storage()
     course_times = storage.get_course_times(course_id)
+    course_times_disp: list[CourseTimeDisplay] = []
     for course_time in course_times:
-        course_time.time_disp = format_time(course_time.time_ms)
+        course_time_disp = CourseTimeDisplay(
+            **asdict(course_time), time_disp=format_time(course_time.time_ms)
+        )
+        course_times_disp.append(course_time_disp)
     course_info = all_course_info.get(course_id)
     if course_info is None:
         course_info = CourseInfo(course_id, course_id, "")
     return render_template(
         "leaderboard.html",
         course_info=course_info,
-        course_times=course_times,
+        course_times=course_times_disp,
     )
 
 
