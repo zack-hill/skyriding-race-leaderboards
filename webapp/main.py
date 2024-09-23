@@ -55,7 +55,7 @@ def index():
     return render_template("index.html", course_records=course_records)
 
 
-@app.route("/course_leaderboard", methods=["GET"])
+@app.route("/course-leaderboard", methods=["GET"])
 def course_leaderboard():
     course_id = request.args.get("course_id")
     if course_id is None:
@@ -91,7 +91,7 @@ def download():
     return redirect(location)
 
 
-@app.route("/get_the_app")
+@app.route("/get-the-app")
 def get_the_app():
     return render_template("get-the-app.html")
 
