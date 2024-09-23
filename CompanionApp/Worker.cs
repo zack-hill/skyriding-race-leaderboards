@@ -66,7 +66,7 @@ public class Worker : BackgroundService
                     {
                         _logger.LogInformation($"Uploading race data for {addonFileData.AccountRaceData.BattleTag}");
                         await UploadRaceData(addonFileData.AccountRaceData);
-                        _logger.LogInformation($"Race data uploaded successfully");
+                        _logger.LogInformation("Race data uploaded successfully");
                     }
                     catch (Exception ex)
                     {
@@ -88,8 +88,7 @@ public class Worker : BackgroundService
     
     private async Task UploadRaceData(AccountRaceData accountRaceData)
     {
-        var a = JsonSerializer.Serialize(accountRaceData);
-        var uploadUrl = _configuration["UploadUrl"];
+        var uploadUrl = $"{_configuration["WebsiteUrl"]}/upload";
         var client = _httpClientFactory.CreateClient();
         var httpRequestMessage = new HttpRequestMessage
         {

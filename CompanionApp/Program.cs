@@ -25,6 +25,7 @@ public class Program
                 services.AddSingleton<GamePathService>();
                 services.AddSingleton<TrayIconService>();
                 services.AddSingleton<AddonDataService>();
+                services.AddSingleton<AddonInstallationService>();
                 services.AddHostedService<Worker>();
             });
 }

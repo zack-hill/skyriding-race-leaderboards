@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 using H.NotifyIcon.Core;
 
 namespace CompanionApp.Services;
@@ -10,11 +11,13 @@ namespace CompanionApp.Services;
 public class TrayIconService : IDisposable
 {
     private readonly GamePathService _gamePathService;
+    private readonly AddonInstallationService _addonInstallationService;
     private TrayIconWithContextMenu? _trayIcon;
 
-    public TrayIconService(GamePathService gamePathService)
+    public TrayIconService(GamePathService gamePathService, AddonInstallationService addonInstallationService)
     {
         _gamePathService = gamePathService;
+        _addonInstallationService = addonInstallationService;
         _gamePathService.GamePathUpdated += GamePathServiceOnGamePathUpdated;
     }
     
@@ -46,6 +49,8 @@ public class TrayIconService : IDisposable
             Items =
             {
                 new PopupMenuItem($" {selectGameDirectoryButtonLabel}", (_, _) => _gamePathService.BrowseForGamePath()),
+                new PopupMenuSeparator(),
+                new PopupMenuItem("Install/Update Addon", (_, _) => Task.Run(() => _addonInstallationService.InstallAddon()).GetAwaiter().GetResult()),
                 new PopupMenuSeparator(),
                 new PopupMenuItem("View Log", (_, _) => ViewLog()),
                 new PopupMenuSeparator(),

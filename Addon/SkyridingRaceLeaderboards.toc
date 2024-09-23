@@ -5,5 +5,5 @@
 ## Version: 1
 ## SavedVariables: SkyridingRaceLeaderboardsDB
 
-SkyridingRaceLeaderboars.lua
+SkyridingRaceLeaderboards.lua
 RaceCurrencies.lua

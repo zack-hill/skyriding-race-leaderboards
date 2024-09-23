@@ -59,7 +59,7 @@ public class AddonDataService
         var wtfAccountDirectory = Path.Combine(gamePath, @"_retail_\WTF\Account");
         return Directory.EnumerateFiles(
             wtfAccountDirectory,
-            "SkyridingRaceLeaderboardDataCollector.lua",
+            "SkyridingRaceLeaderboards.lua",
             SearchOption.AllDirectories);
     }
 
