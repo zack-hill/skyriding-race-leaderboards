@@ -4,7 +4,7 @@
     <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <OutputType>WinExe</OutputType>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
     <AssemblyName>SkyridingRaceLeaderboardsCompanionApp</AssemblyName>
     <ApplicationIcon>Resources\favicon.ico</ApplicationIcon>
   </PropertyGroup>

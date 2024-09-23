@@ -9,7 +9,7 @@ bootstrap = Bootstrap5(app)
 storage = Storage()
 all_course_info = storage.get_all_course_info()
 
-APP_DOWNLOAD_LINK = "https://www.dropbox.com/scl/fi/kmgrf2ycvmeznlo8un5mz/SkyridingRaceLeaderboardsCompanionApp-1.0.1.0-Setup.exe?rlkey=q08y2u4g0k7xbo4bn8vknitny&st=a0tl7snv&dl=1"
+APP_DOWNLOAD_LINK = "https://www.dropbox.com/scl/fi/xtld63x64ipluti7bqm22/SkyridingRaceLeaderboardsCompanionApp-1.0.2.0-Setup.exe?rlkey=dml108tbhxhgytgrvlo6dgz2p&st=vu19hsv8&dl=1"
 ADDON_DOWNLOAD_LINK = "https://www.dropbox.com/scl/fi/cc6qw3nv5ylh8j4e41wqd/Addon0.2.zip?rlkey=k03ysa542zphmihixo0ev7r9f&st=g4rl4ozm&dl=1"
 
 
