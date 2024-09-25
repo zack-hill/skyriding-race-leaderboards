@@ -9,6 +9,7 @@ class CourseInfo:
     course_id: str
     race_name: str
     course_type: str
+    quest_id: int
 
 
 @dataclass
@@ -39,7 +40,8 @@ class Storage:
             CREATE TABLE IF NOT EXISTS course_info(
                 course_id STR,
                 race_name STR,
-                course_type STR
+                course_type STR,
+                quest_id INT
             )
             """
         )
@@ -68,15 +70,15 @@ class Storage:
         cursor = self._connection.cursor()
         result = cursor.execute(
             """
-            SELECT course_id, race_name, course_type
+            SELECT course_id, race_name, course_type, quest_id
             FROM course_info 
             """
         )
         rows = result.fetchall()
         course_info_dict = {}
-        for course_id, race_name, course_type in rows:
+        for course_id, race_name, course_type, quest_id in rows:
             course_info_dict[str(course_id)] = CourseInfo(
-                str(course_id), race_name, course_type
+                str(course_id), race_name, course_type, quest_id
             )
         return course_info_dict
 

@@ -21,6 +21,7 @@ class CourseRecord:
     character_name: str
     race_name: str
     course_type: str
+    quest_id: int
 
 
 @dataclass
@@ -38,18 +39,18 @@ def index():
     course_times = storage.get_all_course_records()
     course_records: list[CourseRecord] = []
     for course_time in course_times:
+        course_info = all_course_info.get(course_time.course_id)
+        if course_info is None or course_info.race_name == "":
+            continue
         course_record = CourseRecord(
             user_id=course_time.user_id,
             course_id=course_time.course_id,
             time_disp=format_time(course_time.time_ms),
             character_name=course_time.character_name,
-            race_name=course_time.course_id,
-            course_type="",
+            race_name=course_info.race_name,
+            course_type=course_info.course_type,
+            quest_id=course_info.quest_id,
         )
-        course_info = all_course_info.get(course_time.course_id)
-        if course_info is not None:
-            course_record.race_name = course_info.race_name
-            course_record.course_type = course_info.course_type
         course_records.append(course_record)
     course_records.sort(key=lambda x: x.race_name)
     return render_template("index.html", course_records=course_records)
