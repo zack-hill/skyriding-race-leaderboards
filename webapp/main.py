@@ -1,4 +1,5 @@
 from dataclasses import dataclass, asdict
+import math
 from flask import Flask, request, render_template, redirect
 from flask_bootstrap import Bootstrap5
 from storage import Storage, CourseInfo
@@ -31,6 +32,13 @@ class CourseTimeDisplay:
     time_ms: int
     time_disp: str
     character_name: str
+
+
+@dataclass
+class UserScoreDisplay:
+    user_id: str
+    user_score: float
+    completed_courses: int
 
 
 @app.route("/")
@@ -77,6 +85,33 @@ def course_leaderboard():
         course_info=course_info,
         course_times=course_times_disp,
     )
+
+
+@app.route("/player-scores")
+def player_scores():
+    storage = Storage()
+    all_courses = storage.get_active_courses()
+    course_placement_maps: dict[str, dict[str, int]] = {}
+    for course_id in all_courses:
+        user_placements = storage.get_user_placement_map(course_id)
+        course_placement_maps[course_id] = user_placements
+    all_users = storage.get_users()
+    user_scores: list[UserScoreDisplay] = []
+    for user_id in all_users:
+        user_score = 0
+        for course_id in all_courses:
+            course_placements = course_placement_maps[course_id]
+            user_placement = course_placements.get(user_id)
+            if user_placement is not None:
+                user_score += 100 / math.sqrt(user_placement)
+        user_score_display = UserScoreDisplay(user_id, round(user_score), 0)
+        user_scores.append(user_score_display)
+    user_scores.sort(key=lambda x: x.user_score, reverse=True)
+    return render_template(
+        "player-scores.html",
+        user_scores=user_scores,
+    )
+    return "", 200
 
 
 @app.route("/download", methods=["GET"])

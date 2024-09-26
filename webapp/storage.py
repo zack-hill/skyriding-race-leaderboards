@@ -115,10 +115,55 @@ class Storage:
             return None
         return int(time_ms[0])
 
+    def get_users(self) -> list[str]:
+        cursor = self._connection.cursor()
+        result = cursor.execute(
+            """
+            SELECT user_id
+            FROM course_time 
+            GROUP BY user_id
+            """
+        )
+        return [user_id[0] for user_id in result.fetchall()]
+
+    def get_active_courses(self) -> list[str]:
+        cursor = self._connection.cursor()
+        result = cursor.execute(
+            """
+            SELECT course_id
+            FROM course_time 
+            GROUP BY course_id
+            """
+        )
+        return [course_id[0] for course_id in result.fetchall()]
+
+    def get_user_placement_map(self, course_id: str) -> dict[str, int]:
+        cursor = self._connection.cursor()
+        result = cursor.execute(
+            """
+            SELECT user_id, time_ms, course_id
+            FROM course_time 
+            WHERE course_id = ?
+            ORDER BY time_ms ASC
+            """,
+            (course_id,),
+        )
+        user_placements: dict[str, int] = {}
+        for i, (user_id, _, _) in enumerate(result.fetchall()):
+            user_placements[user_id] = i + 1
+        return user_placements
+
     # TODO: Batch these calls
     def update_time(
         self, user_id: str, course_id: str, time_ms: int, character_name: str
     ) -> None:
+        if (
+            user_id is None
+            or course_id is None
+            or time_ms is None
+            or character_name is None
+        ):
+            return
         current_time = self.get_time(user_id, course_id)
         cursor = self._connection.cursor()
         if current_time is None:

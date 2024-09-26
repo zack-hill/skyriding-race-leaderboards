@@ -1,0 +1,21 @@
+{% extends "layout.html" %} {% block content %}
+<div class="row justify-content-center">
+  <div class="col-3">
+    <h1>Overall scores</h1>
+    <div>
+      <table class="table">
+        <th scope="col">Rank</th>
+        <th scope="col">Player</th>
+        <th scope="col">Score</th>
+        {%for user_score in user_scores%}
+        <tr>
+          <th scope="row">{{loop.index}}</th>
+          <td>{{user_score.user_id}}</td>
+          <td>{{user_score.user_score}}</td>
+        </tr>
+        {%endfor%}
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

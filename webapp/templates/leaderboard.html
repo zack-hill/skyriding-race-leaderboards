@@ -7,18 +7,20 @@
         Wowhead
       </a>
     </p>
-    <table class="table">
-      <th scope="col">#</th>
-      <th scope="col">Player</th>
-      <th scope="col">Time</th>
-      {%for course_time in course_times%}
-      <tr>
-        <th scope="row">{{loop.index}}</th>
-        <td>{{course_time.user_id}}</td>
-        <td>{{course_time.time_disp}}</td>
-      </tr>
-      {%endfor%}
-    </table>
+    <div class="table-responsive" style="max-width: 1000">
+      <table class="table">
+        <th scope="col">#</th>
+        <th scope="col">Player</th>
+        <th scope="col">Time</th>
+        {%for course_time in course_times%}
+        <tr>
+          <th scope="row">{{loop.index}}</th>
+          <td>{{course_time.user_id}}</td>
+          <td>{{course_time.time_disp}}</td>
+        </tr>
+        {%endfor%}
+      </table>
+    </div>
   </div>
 </div>
 {% endblock %}
