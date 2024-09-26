@@ -90,28 +90,21 @@ def course_leaderboard():
 @app.route("/player-scores")
 def player_scores():
     storage = Storage()
-    all_courses = storage.get_active_courses()
-    course_placement_maps: dict[str, dict[str, int]] = {}
-    for course_id in all_courses:
-        user_placements = storage.get_user_placement_map(course_id)
-        course_placement_maps[course_id] = user_placements
-    all_users = storage.get_users()
-    user_scores: list[UserScoreDisplay] = []
-    for user_id in all_users:
-        user_score = 0
-        for course_id in all_courses:
-            course_placements = course_placement_maps[course_id]
-            user_placement = course_placements.get(user_id)
-            if user_placement is not None:
-                user_score += 100 / math.sqrt(user_placement)
-        user_score_display = UserScoreDisplay(user_id, round(user_score), 0)
-        user_scores.append(user_score_display)
-    user_scores.sort(key=lambda x: x.user_score, reverse=True)
+    # storage._connection.cursor().execute("ALTER TABLE course_time DROP COLUMN score;")
+    # storage._connection.cursor().execute("ALTER TABLE course_time ADD score FLOAT;")
+    # active_courses = storage.get_active_courses()
+    # for course_id in active_courses:
+    #     storage.refresh_course_scores(course_id)
+    user_scores = storage.get_user_scores()
+    print(user_scores)
+    user_scores_display: list[UserScoreDisplay] = []
+    for user_id, user_score in user_scores:
+        user_scores_display.append(UserScoreDisplay(user_id, round(user_score), 0))
+    print(user_scores_display)
     return render_template(
         "player-scores.html",
-        user_scores=user_scores,
+        user_scores=user_scores_display,
     )
-    return "", 200
 
 
 @app.route("/download", methods=["GET"])

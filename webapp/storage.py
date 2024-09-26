@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import math
 import sqlitecloud
 
 CONNECTION_STRING = "sqlitecloud://cd1rspeeik.sqlite.cloud:8860?apikey=rHyR3deilinIX4nmvGMl7JwawKasBAmJsyba63ORLN8"
@@ -31,7 +32,8 @@ class Storage:
                 user_id STR,
                 course_id STR,
                 time_ms INT,
-                character_name STR
+                character_name STR,
+                score FLOAT
             )
             """
         )
@@ -65,6 +67,22 @@ class Storage:
         for user_id, time_ms, character_name in result.fetchall():
             course_times.append(CourseTime(course_id, user_id, time_ms, character_name))
         return course_times
+
+    def get_user_scores(self) -> list[tuple[str, float]]:
+        cursor = self._connection.cursor()
+        result = cursor.execute(
+            """
+            SELECT user_id, SUM(score)
+            FROM course_time 
+            WHERE score IS NOT NULL
+            GROUP BY user_id
+            ORDER BY SUM(score) DESC
+            """,
+        )
+        user_scores: list[tuple[str, float]] = [
+            (user_id, score) for user_id, score in result.fetchall()
+        ]
+        return user_scores
 
     def get_all_course_info(self) -> dict[str, CourseInfo]:
         cursor = self._connection.cursor()
@@ -169,10 +187,11 @@ class Storage:
         if current_time is None:
             cursor.execute(
                 """
-                INSERT INTO course_time VALUES(?, ?, ?, ?)
+                INSERT INTO course_time VALUES(?, ?, ?, ?, ?)
                 """,
-                (user_id, course_id, time_ms, character_name),  # type: ignore
+                (user_id, course_id, time_ms, character_name, 0),  # type: ignore
             )
+            self.refresh_course_scores(course_id)
             return
         if current_time < time_ms:
             return
@@ -188,3 +207,35 @@ class Storage:
             """,
             (time_ms, character_name, user_id, course_id),  # type: ignore
         )
+        self.refresh_course_scores(course_id)
+
+    def refresh_course_scores(self, course_id: str) -> None:
+        cursor = self._connection.cursor()
+        result = cursor.execute(
+            """
+            SELECT user_id, time_ms
+            FROM course_time 
+            WHERE course_id = ?
+            ORDER BY time_ms ASC
+            """,
+            (course_id,),
+        )
+        user_scores = [
+            (self._get_user_score(i), user[0], course_id)
+            for i, user in enumerate(result.fetchall())
+        ]
+        cursor.executemany(
+            """
+            UPDATE course_time
+            SET 
+                score = ?
+            WHERE
+                user_id = ? AND
+                course_id = ?
+            """,
+            user_scores,  # type: ignore
+        )
+
+    @staticmethod
+    def _get_user_score(index: int) -> float:
+        return 100 / math.sqrt(index + 1)
