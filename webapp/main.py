@@ -71,7 +71,7 @@ def course_leaderboard():
         course_times_disp.append(course_time_disp)
     course_info = all_course_info.get(course_id)
     if course_info is None:
-        course_info = CourseInfo(course_id, course_id, "")
+        course_info = CourseInfo(course_id, course_id, "", 0)
     return render_template(
         "leaderboard.html",
         course_info=course_info,
