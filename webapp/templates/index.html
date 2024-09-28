@@ -7,24 +7,28 @@
         <th scope="col">Wowhead Link</th>
         <th scope="col">Record Time</th>
         <th scope="col">Player</th>
-        {%for course_record in course_records%}
-        <tr>
-          <th scope="row">
-            <a
-              href="{{url_for('course_leaderboard', course_id=course_record.course_id)}}"
-            >
-              {{course_record.race_name}}
-            </a>
-            <br />{{course_record.course_type}}
-          </th>
-          <td>
-            <a href="https://www.wowhead.com/quest={{course_record.quest_id}}">
-              Link
-            </a>
-          </td>
-          <td>{{course_record.time_disp}}</td>
-          <td>{{course_record.user_name}}</td>
-        </tr>
+        {%for race in races%}
+          <tr>
+            <td colspan=4>
+              <h6>{{race.race_name}}</h6>
+            </td>
+          </tr>
+          {%for course_record in race.course_records%}
+          <tr>
+            <td>
+              <a href="{{url_for('course_leaderboard', course_id=course_record.course_id)}}" style="margin-left: 2em;">
+                {{course_record.course_type}}
+              </a>
+            </td>
+            <td>
+              <a href="https://www.wowhead.com/quest={{course_record.quest_id}}">
+                Link
+              </a>
+            </td>
+            <td>{{course_record.time_disp}}</td>
+            <td>{{course_record.user_name}}</td>
+          </tr>
+          {%endfor%}
         {%endfor%}
       </table>
     </div>
