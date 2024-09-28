@@ -17,6 +17,7 @@ ADDON_DOWNLOAD_LINK = "https://www.dropbox.com/scl/fi/cc6qw3nv5ylh8j4e41wqd/Addo
 @dataclass
 class CourseRecord:
     user_id: str
+    user_name: str
     course_id: str
     time_disp: str
     character_name: str
@@ -29,6 +30,7 @@ class CourseRecord:
 class CourseTimeDisplay:
     course_id: str
     user_id: str
+    user_name: str
     time_ms: int
     time_disp: str
     character_name: str
@@ -37,6 +39,7 @@ class CourseTimeDisplay:
 @dataclass
 class UserScoreDisplay:
     user_id: str
+    user_name: str
     user_score: float
     completed_courses: int
 
@@ -50,8 +53,10 @@ def index():
         course_info = all_course_info.get(course_time.course_id)
         if course_info is None or course_info.race_name == "":
             continue
+        user_name = course_time.user_id.split("#")[0]
         course_record = CourseRecord(
             user_id=course_time.user_id,
+            user_name=user_name,
             course_id=course_time.course_id,
             time_disp=format_time(course_time.time_ms),
             character_name=course_time.character_name,
@@ -73,8 +78,11 @@ def course_leaderboard():
     course_times = storage.get_course_times(course_id)
     course_times_disp: list[CourseTimeDisplay] = []
     for course_time in course_times:
+        user_name = course_time.user_id.split("#")[0]
         course_time_disp = CourseTimeDisplay(
-            **asdict(course_time), time_disp=format_time(course_time.time_ms)
+            **asdict(course_time),
+            time_disp=format_time(course_time.time_ms),
+            user_name=user_name,
         )
         course_times_disp.append(course_time_disp)
     course_info = all_course_info.get(course_id)
@@ -90,16 +98,19 @@ def course_leaderboard():
 @app.route("/player-scores")
 def player_scores():
     storage = Storage()
-    # storage._connection.cursor().execute("ALTER TABLE course_time DROP COLUMN score;")
-    # storage._connection.cursor().execute("ALTER TABLE course_time ADD score FLOAT;")
-    # active_courses = storage.get_active_courses()
-    # for course_id in active_courses:
-    #     storage.refresh_course_scores(course_id)
     user_scores = storage.get_user_scores()
     print(user_scores)
     user_scores_display: list[UserScoreDisplay] = []
     for user_id, user_score in user_scores:
-        user_scores_display.append(UserScoreDisplay(user_id, round(user_score), 0))
+        user_name = user_id.split("#")[0]
+        user_scores_display.append(
+            UserScoreDisplay(
+                user_id=user_id,
+                user_name=user_name,
+                user_score=round(user_score),
+                completed_courses=0,
+            )
+        )
     print(user_scores_display)
     return render_template(
         "player-scores.html",

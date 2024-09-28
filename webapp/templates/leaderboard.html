@@ -15,7 +15,7 @@
         {%for course_time in course_times%}
         <tr>
           <th scope="row">{{loop.index}}</th>
-          <td>{{course_time.user_id}}</td>
+          <td>{{course_time.user_name}}</td>
           <td>{{course_time.time_disp}}</td>
         </tr>
         {%endfor%}
