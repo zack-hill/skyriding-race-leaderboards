@@ -10,6 +10,13 @@ bootstrap = Bootstrap5(app)
 
 storage = Storage()
 all_course_info = storage.get_all_course_info()
+course_type_sort = {
+    "Standard": 1,
+    "Advanced": 2,
+    "Reverse": 3,
+    "Challenge": 4,
+    "Challenge Reverse": 5,
+}
 
 APP_DOWNLOAD_LINK = "https://www.dropbox.com/scl/fi/xtld63x64ipluti7bqm22/SkyridingRaceLeaderboardsCompanionApp-1.0.2.0-Setup.exe?rlkey=dml108tbhxhgytgrvlo6dgz2p&st=vu19hsv8&dl=1"
 ADDON_DOWNLOAD_LINK = "https://www.dropbox.com/scl/fi/cc6qw3nv5ylh8j4e41wqd/Addon0.2.zip?rlkey=k03ysa542zphmihixo0ev7r9f&st=g4rl4ozm&dl=1"
@@ -51,8 +58,10 @@ class UserScoreDisplay:
 def index():
     storage = Storage()
     all_course_times = storage.get_all_course_records()
+    sorted_course_times = sorted(all_course_times, key=lambda x: all_course_info[x.course_id].race_name)
+    grouped_course_times = groupby(sorted_course_times, key=lambda x: all_course_info[x.course_id].race_name)
     races: list[RaceInfo] = []
-    for race_name, course_times in groupby(all_course_times, lambda x: all_course_info[x.course_id].race_name):
+    for race_name, course_times in grouped_course_times:
         race_info = RaceInfo(
             race_name=race_name,
             course_records=[],
@@ -72,6 +81,7 @@ def index():
                 quest_id=course_info.quest_id,
             )
             race_info.course_records.append(course_record)
+        race_info.course_records.sort(key=lambda x: course_type_sort[x.course_type])
         races.append(race_info)
     races.sort(key=lambda x: x.race_name)
 
