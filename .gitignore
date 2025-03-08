@@ -4,3 +4,4 @@
 CompanionApp/Setup/Output/
 *.pyc
 *.db
+*.env

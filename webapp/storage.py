@@ -1,8 +1,10 @@
 from dataclasses import dataclass
+from dotenv import load_dotenv
 import math
 import sqlitecloud
+import os
 
-CONNECTION_STRING = "sqlitecloud://cd1rspeeik.sqlite.cloud:8860?apikey=rHyR3deilinIX4nmvGMl7JwawKasBAmJsyba63ORLN8"
+load_dotenv()
 
 
 @dataclass
@@ -23,7 +25,7 @@ class CourseTime:
 
 class Storage:
     def __init__(self) -> None:
-        self._connection = sqlitecloud.connect(CONNECTION_STRING)
+        self._connection = sqlitecloud.connect(os.environ.get("CONNECTION_STRING"))
         self._connection.execute("USE DATABASE skyriding_data.db")
         cursor = self._connection.cursor()
         cursor.execute(
